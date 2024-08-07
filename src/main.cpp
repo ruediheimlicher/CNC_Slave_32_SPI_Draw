@@ -678,13 +678,13 @@ void tastaturtimerFunktion(void) // TASTENSTARTIMPULSDAUER
 {
 
    //OSZIB_LO();
-   if (tastaturindex % 2) // ungerade, Impuls
+   if (tastaturindex % 2) // ungerade, Impuls starten
    {
          tastaturTimer.update(IMPULSBREITE);
          digitalWriteFast(tastaturstep,HIGH);
 
    }
-   else
+   else // impuls beenden
    {
       if(rampimpulsdauer > (TASTENENDIMPULSDAUER + RAMPDELAY))
       {
@@ -1860,27 +1860,27 @@ void tastenfunktion(uint16_t Tastenwert)
                      else
                      {
                      
-                     if (pfeiltastecode == 0)
-                     {
-                        pfeiltastecode = 3;
-                        pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
-                        pfeilrampcounter = 0;
-                        endimpulsdauer = TASTENENDIMPULSDAUER;
-                        tastaturstep = MA_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
+                        if (pfeiltastecode == 0)
+                        {
+                           pfeiltastecode = 3;
+                           pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
+                           pfeilrampcounter = 0;
+                           endimpulsdauer = TASTENENDIMPULSDAUER;
+                           tastaturstep = MA_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
 
-                        digitalWriteFast(MA_EN,LOW);
-                        digitalWriteFast(MA_RI,LOW);
-                        
-                        digitalWriteFast(MA_STEP,LOW);
-                     }
+                           digitalWriteFast(MA_EN,LOW);
+                           digitalWriteFast(MA_RI,LOW);
+                           
+                           digitalWriteFast(MA_STEP,LOW);
+                        }
                      }
                   }
                   else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag A0
                   {
-                     
+                     //digitalWriteFast(MA_EN,HIGH);
                   }
 
-                } break; // case Vortag
+               } break; // case Vortag
                   
                   
                case 5:                        // Ebene tiefer
