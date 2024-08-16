@@ -35,7 +35,7 @@
  #define MB_RI           4
  #define MB_EN           5
  
- #define END_A0_PIN      20           // Bit fuer Endanschlag bei A0
+ #define END_A0_PIN      20           // Bit fuer Startanschlag bei Motor A
  #define END_B0_PIN      21           // Bit fuer Endanschlag bei A1
  
 #define DC_PWM            9 // war 22
@@ -46,8 +46,8 @@
 //#define MD_RI              10
 #define MD_EN              30
 
-#define END_C0_PIN         16          // Anschlagstatus:  Bit fuer Endanschlag bei C0
-#define END_D0_PIN         17         // Anschlagstatus:  Bit fuer Endanschlag bei D0
+#define END_A1_PIN         16          // Anschlagstatus:  Bit fuer Endanschlag bei Motor A
+#define END_B1_PIN         17         // Anschlagstatus:  Bit fuer Endanschlag bei D0
 
 
 
@@ -73,6 +73,10 @@
 #define END_C0          6       //  Bit fuer Endanschlag C0 
 #define END_D0          7       //           Endanschlag D0 
 
+#define RIGHT       1
+#define UP          2
+#define LEFT        3
+#define DOWN        4
 
 #define RICHTUNG_A   0
 #define RICHTUNG_B   1
@@ -80,9 +84,9 @@
 #define RICHTUNG_D   3
 
 #define MOTOR_A     0
-#define MOTOR_B 1
-#define MOTOR_C 2
-#define MOTOR_D 3
+#define MOTOR_B     1
+#define MOTOR_C     2
+#define MOTOR_D     3
 
 
 #define HALT_PIN           0

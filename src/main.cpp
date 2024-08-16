@@ -478,7 +478,7 @@ uint8_t analogtastaturstatus = 0;
 uint16_t TastenStatus=0;
 uint16_t Tastenprellen=0x1F;
 uint8_t oldTaste = 0;
-uint8_t            pfeiltastecode = 0;
+volatile uint8_t        pfeiltastecode = 0;
 // IntervalTimer for Tastatur
 IntervalTimer tastaturTimer;
 
@@ -683,21 +683,47 @@ void tastaturtimerFunktion(void) // TASTENSTARTIMPULSDAUER
       {
          case MA_STEP:
          {
-            if ((digitalRead(END_A0_PIN)) || (digitalRead(MA_RI) == HIGH))// kein Anschlag
+            
+            if (digitalRead(END_A0_PIN))//; || (pfeiltastecode == RIGHT))// kein Anschlag
+            {
+               if (digitalRead(END_A1_PIN) || (pfeiltastecode == LEFT))//
+               {
+                  tastaturTimer.update(IMPULSBREITE);
+                  digitalWriteFast(tastaturstep,HIGH); // Impuls starten
+               }
+            }
+            else if (pfeiltastecode == RIGHT)
             {
                tastaturTimer.update(IMPULSBREITE);
                digitalWriteFast(tastaturstep,HIGH); // Impuls starten
-
+            
             }
+
+
+            /*
+            if ((digitalRead(END_A1_PIN)) || (digitalRead(MA_RI) == LOW))// kein Anschlag
+               {
+                  tastaturTimer.update(IMPULSBREITE);
+                  digitalWriteFast(tastaturstep,HIGH); // Impuls starten
+
+               }
+            */
+
          }break;
-         case MB_STEP:
+         case MB_STEP:  
          {
-           if ((digitalRead(END_B0_PIN))  || (digitalRead(MB_RI) == HIGH))
+           //if ((digitalRead(END_B0_PIN))  || (digitalRead(MB_RI) == HIGH))
+            if ((digitalRead(END_B0_PIN)   || pfeiltastecode == UP))
+
             {
                tastaturTimer.update(IMPULSBREITE);
                digitalWriteFast(tastaturstep,HIGH);
             }
-         }break;
+         }break;  
+
+
+
+
       }// switch
    }
    else // impuls beenden
@@ -1125,7 +1151,7 @@ void AnschlagVonMotor(const uint8_t motor)
    break;
    case 2:
    {
-      endPin = END_C0_PIN;
+      endPin = END_A1_PIN;
       endBit = motor;
    }
    break;
@@ -1803,7 +1829,7 @@ void tastenfunktion(uint16_t Tastenwert)
                   if (pfeiltastecode == 0)
                   {
                      //OSZIB_LO();
-                     pfeiltastecode = 2;
+                     pfeiltastecode = UP;
                      pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
                      endimpulsdauer = TASTENENDIMPULSDAUER;
                      tastaturstep = MB_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
@@ -1828,13 +1854,10 @@ void tastenfunktion(uint16_t Tastenwert)
                case 4:   // left
                {
                   if (digitalRead(END_A0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
-                  {
-                     
-                  
-                     
+                  {     
                         if (pfeiltastecode == 0)
                         {
-                           pfeiltastecode = 3;
+                           pfeiltastecode = LEFT;
                            pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
                            pfeilrampcounter = 0;
                            endimpulsdauer = TASTENENDIMPULSDAUER;
@@ -1842,7 +1865,6 @@ void tastenfunktion(uint16_t Tastenwert)
 
                            digitalWriteFast(MA_EN,LOW);
                            digitalWriteFast(MA_RI,LOW);
-                           
                         }
                      
                   }
@@ -1853,7 +1875,6 @@ void tastenfunktion(uint16_t Tastenwert)
 
                } break; // case 4
                   
-                  
                case 5:                        // Ebene tiefer
                {
                   // Serial.printf("Taste 5\n");
@@ -1861,9 +1882,6 @@ void tastenfunktion(uint16_t Tastenwert)
                   // SPI_out2data(102,16);
                   if (pfeiltastecode == 0)
                   {
-                     
-                     
-
                      //haltfunktion();
                   }
                   
@@ -1871,20 +1889,19 @@ void tastenfunktion(uint16_t Tastenwert)
                   
                case 6: // right
                {
-                  if (pfeiltastecode == 0)
+                  if (digitalRead(END_A1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
                   {
-                     
-                     pfeiltastecode = 1;
-                     pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
-                     endimpulsdauer = TASTENENDIMPULSDAUER;
-                     tastaturstep = MA_STEP;
+                     if (pfeiltastecode == 0)
+                     { 
+                        pfeiltastecode = RIGHT;
+                        pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
+                        endimpulsdauer = TASTENENDIMPULSDAUER;
+                        tastaturstep = MA_STEP;
 
-                     digitalWriteFast(MA_RI,HIGH);
-                     digitalWriteFast(MA_EN,LOW);
-
-
+                        digitalWriteFast(MA_RI,HIGH);
+                        digitalWriteFast(MA_EN,LOW);
+                     }
                   }
-                  
                } break; // case 6
                   
                   
@@ -1927,7 +1944,7 @@ void tastenfunktion(uint16_t Tastenwert)
                {
                   if (pfeiltastecode == 0)
                   {
-                     pfeiltastecode = 4;
+                     pfeiltastecode = DOWN;
                      pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
                      endimpulsdauer = TASTENENDIMPULSDAUER;
                      pfeilrampcounter = 0;
@@ -1936,7 +1953,6 @@ void tastenfunktion(uint16_t Tastenwert)
                      digitalWriteFast(MB_RI,LOW);
                      digitalWriteFast(MB_EN,LOW);
                      
-
                   }
                   
                     
@@ -2345,13 +2361,13 @@ void setup()
 
    pinMode(END_A0_PIN, INPUT); //
    pinMode(END_B0_PIN, INPUT); //
-   pinMode(END_C0_PIN, INPUT); //
-   pinMode(END_D0_PIN, INPUT); //
+   pinMode(END_A1_PIN, INPUT); //
+   pinMode(END_B1_PIN, INPUT); //
 
    pinMode(END_A0_PIN, INPUT_PULLUP); // HI
    pinMode(END_B0_PIN, INPUT_PULLUP); //
-   pinMode(END_C0_PIN, INPUT_PULLUP); //
-   pinMode(END_D0_PIN, INPUT_PULLUP); //
+   pinMode(END_A1_PIN, INPUT_PULLUP); //
+   pinMode(END_B1_PIN, INPUT_PULLUP); //
 
    if (TEST)
    {
@@ -3819,6 +3835,10 @@ void loop()
       AnschlagVonMotor(0); // Bewegung anhalten
    }
 
+   
+
+
+
    // #pragma mark Anschlag   Motor B
    //  **************************************
    //  * Anschlag Motor B *
@@ -3848,7 +3868,7 @@ void loop()
    // AnschlagVonMotor(2);
 
    // Anschlag C0
-   if (digitalRead(END_C0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag C0
+   if (digitalRead(END_A1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag C0
    {
       if (anschlagstatus & (1 << END_C0))
       {
@@ -3868,7 +3888,7 @@ void loop()
    // AnschlagVonMotor(3);
 
    // Anschlag D0
-   if (digitalRead(END_D0_PIN)) // Schlitten nicht am Anschlag D0
+   if (digitalRead(END_B1_PIN)) // Schlitten nicht am Anschlag D0
    {
       if (anschlagstatus & (1 << END_D0))
       {
