@@ -677,22 +677,18 @@ void delaytimerfunction(void) // 1us ohne ramp
 void tastaturtimerFunktion(void) // TASTENSTARTIMPULSDAUER
 {
    // bei jedem fire wird ein impuls gestartet oder nach IMPULSBREITE beendet
-   //OSZIB_LO();
    if (tastaturindex % 2) // ungerade, Impuls starten
    {
       switch (tastaturstep)
       {
          case MA_STEP:
          {
-
             if ((digitalRead(END_A0_PIN)) || (digitalRead(MA_RI) == HIGH))// kein Anschlag
             {
                tastaturTimer.update(IMPULSBREITE);
                digitalWriteFast(tastaturstep,HIGH); // Impuls starten
-               
-            }
-    
 
+            }
          }break;
          case MB_STEP:
          {
@@ -701,27 +697,19 @@ void tastaturtimerFunktion(void) // TASTENSTARTIMPULSDAUER
                tastaturTimer.update(IMPULSBREITE);
                digitalWriteFast(tastaturstep,HIGH);
             }
-
          }break;
-         
       }// switch
-
-
-             
-
    }
    else // impuls beenden
    {
       if(rampimpulsdauer > (TASTENENDIMPULSDAUER + RAMPDELAY))
       {
          rampimpulsdauer -= RAMPDELAY;
-         
       }
       tastaturTimer.update(rampimpulsdauer); // Impulsabstand updaten
       digitalWriteFast(tastaturstep,LOW);
    }
    tastaturindex++;
-
 }
 
 
@@ -1493,14 +1481,12 @@ uint16_t readTastatur(void)
 }
 void joysticktimerAFunktion(void)
 {
-   
    if ((maxminstatus & (1<<MAX_A)) && (digitalRead(END_A0_PIN)))
    {
       return;
    }
-      if(joystickindexA % 2) // ungerade, Impuls, 1,3
+   if(joystickindexA % 2) // ungerade, Impuls, 1,3
    {
-      
      //ungerade, impulsabstand einstellen, PINs deaktivieren
       if ((digitalRead(END_A0_PIN)) || (digitalRead(MA_RI) == HIGH))// kein Anschlag
       {
@@ -1510,15 +1496,11 @@ void joysticktimerAFunktion(void)
    }
    else 
    {
-      //OSZIB_LO();
       // Pulslaenge einstellen, PINs aktivieren
       uint8_t tempindex = joystickindexA & 0x03; // 0,2
-
       diff = 0;
       mapdiff = 0;
       uint8_t joystickrichtung = 0; 
-
-     
      if (potwertA > potmitteA) // vorwaerts
      {
          joystickrichtung  = 1;
@@ -1528,15 +1510,9 @@ void joysticktimerAFunktion(void)
      {
          joystickrichtung = 0;
          diff = potmitteA -potwertA; //(joystickMitteArray[tempindex] - joystickWertArray[tempindex]);
-      }
-
-     //if(abs(potwertA - joystickMitteArray[tempindex]) > JOYSTICKTOTBEREICH) // ausserhalb mitte
-     
-     
+      }       
      if ((diff > JOYSTICKTOTBEREICH))// && (digitalRead(END_A0_PIN))) // ausserhalb mitte
       { 
-
-    
          if (joystickrichtung)
          {
             mapdiff = map(diff,0,calibmaxA - potmitteA ,0,JOYSTICKMAXDIFF);
@@ -1544,9 +1520,7 @@ void joysticktimerAFunktion(void)
          else
          {
             mapdiff = map(diff,0,potmitteA - calibminA,0,JOYSTICKMAXDIFF);
-         }
-         
-          
+         }      
          joystickbuffer[32] = (diff & 0xFF00) >> 8;
          joystickbuffer[33] = diff & 0x00FF;
          joystickbuffer[34] = (mapdiff & 0xFF00) >> 8;
@@ -1560,8 +1534,7 @@ void joysticktimerAFunktion(void)
          //SPI_out2data(102,stickA);
          
          joysticktimerA.update(((JOYSTICKMAXTICKS - mapdiff)));
-         
-         
+      
          if(joystickrichtung)
          {
             {
@@ -1600,16 +1573,13 @@ void joysticktimerBFunktion(void)
    }
    if(joystickindexB % 2) // ungerade, Impuls, 1,3
    {
-      //();
-       //OSZIC_HI();
-       OSZIA_HI();
+      
      //ungerade, impulsabstand einstellen, PINs deaktivieren
-   
-   if ((digitalRead(END_B0_PIN)) || (digitalRead(MB_RI) == HIGH))// kein Anschlag
-      {
-      joysticktimerB.update(JOYSTICKIMPULS);
-      digitalWriteFast(MB_STEP,HIGH);
-      }
+      if ((digitalRead(END_B0_PIN)) || (digitalRead(MB_RI) == HIGH))// kein Anschlag
+         {
+         joysticktimerB.update(JOYSTICKIMPULS);
+         digitalWriteFast(MB_STEP,HIGH);
+         }
    }
    else 
    {
@@ -1620,7 +1590,6 @@ void joysticktimerBFunktion(void)
       diff = 0;
       mapdiff = 0;
       uint8_t joystickrichtung = 0; 
-     //digitalWriteFast(MB_EN,LOW);
 
      if (potwertB > potmitteB) // vorwaerts
      {
@@ -1629,11 +1598,9 @@ void joysticktimerBFunktion(void)
      }
      else 
      {
-         //digitalWriteFast(MA_RI,HIGH);
          joystickrichtung = 0;
          diff = potmitteB -potwertB; //(joystickMitteBrray[tempindex] - joystickWertBrray[tempindex]);
      }
-
 
      //if(abs(potwertB - joystickMitteBrray[tempindex]) > JOYSTICKTOTBEREICH) // ausserhalb mitte
      if(diff > JOYSTICKTOTBEREICH) // ausserhalb mitte
@@ -1649,12 +1616,7 @@ void joysticktimerBFunktion(void)
          }
           
           
-         /*
-         if (diff > JOYSTICKMAXDIFF)
-         {
-            diff = JOYSTICKMAXDIFF;
-         }
-         */
+        
          joystickbuffer[36] = (diff & 0xFF00) >> 8;
          joystickbuffer[37] = diff & 0x00FF;
          joystickbuffer[38] = (mapdiff & 0xFF00) >> 8;
