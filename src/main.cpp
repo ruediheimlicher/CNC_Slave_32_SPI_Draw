@@ -56,7 +56,7 @@
 //#include <Adafruit_SSD1306.h>
 #include <LiquidCrystal_I2C.h>
 
-//#include <U8g2lib.h>
+#include <U8g2lib.h>
 
 #include "main.h"
 //#include "display.h"
@@ -113,7 +113,7 @@ const int chipSelect = 14;
 
 // https://registry.platformio.org/libraries/fmalpartida/LiquidCrystal/examples/HelloWorld_i2c/HelloWorld_i2c.pde
 //LiquidCrystal_I2C lcd(0x38); 
-LiquidCrystal_I2C lcd(39,20,4); // 0x27 > 39
+//LiquidCrystal_I2C lcd(39,20,4); // 0x27 > 39
 
 #include "bresenham.h"
 
@@ -440,7 +440,7 @@ uint8_t maxminstatus = 0; // 0 wenn max, min fixiert
 
 #define JOYSTICKSTARTIMPULS   200 // impuls bei Start Joystick von Tastatur aus
 #define JOYSTICKIMPULS        200 // impulsdauer
-#define JOYSTICKTOTBEREICH    10
+#define JOYSTICKTOTBEREICH   50
 //#define JOYSTICKMINIMPULS     1000
 #define JOYSTICKMAXDIFF       4800
 #define JOYSTICKMAXTICKS      6000
@@ -478,7 +478,7 @@ uint8_t analogtastaturstatus = 0;
 uint16_t TastenStatus=0;
 uint16_t Tastenprellen=0x1F;
 uint8_t oldTaste = 0;
-volatile uint8_t        pfeiltastecode = 0;
+uint8_t            pfeiltastecode = 0;
 // IntervalTimer for Tastatur
 IntervalTimer tastaturTimer;
 
@@ -676,62 +676,26 @@ void delaytimerfunction(void) // 1us ohne ramp
 
 void tastaturtimerFunktion(void) // TASTENSTARTIMPULSDAUER
 {
-   // bei jedem fire wird ein impuls gestartet oder nach IMPULSBREITE beendet
+
+   //OSZIB_LO();
    if (tastaturindex % 2) // ungerade, Impuls starten
    {
-      switch (tastaturstep)
-      {
-         case MA_STEP:
-         {
-            if (digitalRead(END_A0_PIN))//; || (pfeiltastecode == RIGHT))// kein Anschlag
-            {
-               if (digitalRead(END_A1_PIN) || (pfeiltastecode == LEFT))//
-               {
-                  tastaturTimer.update(IMPULSBREITE);
-                  digitalWriteFast(tastaturstep,HIGH); // Impuls starten
-               }
-            }
-            else if (pfeiltastecode == RIGHT)
-            {
-               tastaturTimer.update(IMPULSBREITE);
-               digitalWriteFast(tastaturstep,HIGH); // Impuls starten
-            }
+         tastaturTimer.update(IMPULSBREITE);
+         digitalWriteFast(tastaturstep,HIGH);
 
-
-         }break;
-         case MB_STEP:  
-         {
-            
-            if (digitalRead(END_B0_PIN) )//  || (pfeiltastecode == UP))
-            {
-               if (digitalRead(END_B1_PIN) || (pfeiltastecode == DOWN))//
-               {
-               tastaturTimer.update(IMPULSBREITE);
-               digitalWriteFast(tastaturstep,HIGH);
-               }
-
-            }
-            else if (pfeiltastecode == UP)
-            
-            {
-               tastaturTimer.update(IMPULSBREITE);
-               digitalWriteFast(tastaturstep,HIGH);
-
-
-            }
-         }break;  
-      }// switch
    }
    else // impuls beenden
    {
       if(rampimpulsdauer > (TASTENENDIMPULSDAUER + RAMPDELAY))
       {
          rampimpulsdauer -= RAMPDELAY;
+         
       }
-      tastaturTimer.update(rampimpulsdauer); // Impulsabstand updaten
+      tastaturTimer.update(rampimpulsdauer);
       digitalWriteFast(tastaturstep,LOW);
    }
    tastaturindex++;
+
 }
 
 
@@ -1147,7 +1111,7 @@ void AnschlagVonMotor(const uint8_t motor)
    break;
    case 2:
    {
-      endPin = END_A1_PIN;
+      endPin = END_C0_PIN;
       endBit = motor;
    }
    break;
@@ -1484,6 +1448,7 @@ uint16_t readJoystick(uint8_t stick)
    uint16_t adctastenwert = adc->adc0->analogRead(stick);
    if (adctastenwert > 10)
    {
+      //// Serial.printf("readTastatur adctastenwert: %d\n",adctastenwert);
       return adctastenwert;
       
    }
@@ -1501,38 +1466,37 @@ uint16_t readTastatur(void)
    }
    return 0;
 }
+
 void joysticktimerAFunktion(void)
 {
+   
    if ((maxminstatus & (1<<MAX_A)) && (digitalRead(END_A0_PIN)))
    {
       return;
    }
-   if(joystickindexA % 2) // ungerade, Impuls, 1,3
+      if(joystickindexA % 2) // ungerade, Impuls, 1,3
    {
+      //OSZIB_HI();
+      // OSZIC_HI();
+       OSZIA_HI();
      //ungerade, impulsabstand einstellen, PINs deaktivieren
+   
+      joysticktimerA.update(JOYSTICKIMPULS);
      
-      if (digitalRead(END_A0_PIN))  // kein Anschlag an A0
-         {
-            if (digitalRead(END_A1_PIN) || (digitalRead(MA_RI) == LOW))// Kein Anschlag an A1 oder Richtung von A1 weg
-            {
-               joysticktimerA.update(JOYSTICKIMPULS);
-               digitalWriteFast(MA_STEP,HIGH); // Impuls starten
-            }
-         }
-         else if (digitalRead(MA_RI) == HIGH) // Anschlag an A0 und Richtung von A0 weg
-         {
-            joysticktimerA.update(JOYSTICKIMPULS);
-            digitalWriteFast(MA_STEP,HIGH); // Impuls starten
-         }
-
+      digitalWriteFast(MA_STEP,HIGH);
+      
    }
    else 
    {
+      //OSZIB_LO();
       // Pulslaenge einstellen, PINs aktivieren
       uint8_t tempindex = joystickindexA & 0x03; // 0,2
+
       diff = 0;
       mapdiff = 0;
       uint8_t joystickrichtung = 0; 
+
+     
      if (potwertA > potmitteA) // vorwaerts
      {
          joystickrichtung  = 1;
@@ -1542,9 +1506,15 @@ void joysticktimerAFunktion(void)
      {
          joystickrichtung = 0;
          diff = potmitteA -potwertA; //(joystickMitteArray[tempindex] - joystickWertArray[tempindex]);
-      }       
+      }
+
+     //if(abs(potwertA - joystickMitteArray[tempindex]) > JOYSTICKTOTBEREICH) // ausserhalb mitte
+     
+     
      if ((diff > JOYSTICKTOTBEREICH))// && (digitalRead(END_A0_PIN))) // ausserhalb mitte
       { 
+
+    
          if (joystickrichtung)
          {
             mapdiff = map(diff,0,calibmaxA - potmitteA ,0,JOYSTICKMAXDIFF);
@@ -1552,7 +1522,10 @@ void joysticktimerAFunktion(void)
          else
          {
             mapdiff = map(diff,0,potmitteA - calibminA,0,JOYSTICKMAXDIFF);
-         }      
+         }
+         
+         
+          
          joystickbuffer[32] = (diff & 0xFF00) >> 8;
          joystickbuffer[33] = diff & 0x00FF;
          joystickbuffer[34] = (mapdiff & 0xFF00) >> 8;
@@ -1566,7 +1539,10 @@ void joysticktimerAFunktion(void)
          //SPI_out2data(102,stickA);
          
          joysticktimerA.update(((JOYSTICKMAXTICKS - mapdiff)));
-      
+         
+         
+
+
          if(joystickrichtung)
          {
             {
@@ -1599,32 +1575,21 @@ void joysticktimerAFunktion(void)
 void joysticktimerBFunktion(void)
 {
    
-   if ((maxminstatus & (1<<MAX_A))  && (digitalRead(END_B0_PIN)))
+   if((maxminstatus & (1<<MAX_A))  && (digitalRead(END_B0_PIN)))
    {
       return;
    }
    if(joystickindexB % 2) // ungerade, Impuls, 1,3
    {
-      
+      //();
+       //OSZIC_HI();
+       OSZIA_HI();
      //ungerade, impulsabstand einstellen, PINs deaktivieren
+   
+      joysticktimerB.update(JOYSTICKIMPULS);
      
-      if (digitalRead(END_B0_PIN)) //|| (digitalRead(MB_RI) == HIGH))// kein Anschlag
-         {
-            if ((digitalRead(END_B1_PIN) ) || (digitalRead(MB_RI) == LOW))// Kein Anschlag an A1 oder Richtung von A1 weg
-            {
-               joysticktimerB.update(JOYSTICKIMPULS);
-               digitalWriteFast(MB_STEP,HIGH); // Impuls starten
-            }
-         }
-         else  if (digitalRead(MB_RI) == HIGH) // Anschlag an B0 und Richtung von B0 weg
-         {
-            joysticktimerB.update(JOYSTICKIMPULS);
-            digitalWriteFast(MB_STEP,HIGH);
-         }
-   
-   
-   
-   
+      digitalWriteFast(MB_STEP,HIGH);
+      
    }
    else 
    {
@@ -1635,6 +1600,7 @@ void joysticktimerBFunktion(void)
       diff = 0;
       mapdiff = 0;
       uint8_t joystickrichtung = 0; 
+     //digitalWriteFast(MB_EN,LOW);
 
      if (potwertB > potmitteB) // vorwaerts
      {
@@ -1643,9 +1609,11 @@ void joysticktimerBFunktion(void)
      }
      else 
      {
+         //digitalWriteFast(MA_RI,HIGH);
          joystickrichtung = 0;
          diff = potmitteB -potwertB; //(joystickMitteBrray[tempindex] - joystickWertBrray[tempindex]);
      }
+
 
      //if(abs(potwertB - joystickMitteBrray[tempindex]) > JOYSTICKTOTBEREICH) // ausserhalb mitte
      if(diff > JOYSTICKTOTBEREICH) // ausserhalb mitte
@@ -1661,7 +1629,12 @@ void joysticktimerBFunktion(void)
          }
           
           
-        
+         /*
+         if (diff > JOYSTICKMAXDIFF)
+         {
+            diff = JOYSTICKMAXDIFF;
+         }
+         */
          joystickbuffer[36] = (diff & 0xFF00) >> 8;
          joystickbuffer[37] = diff & 0x00FF;
          joystickbuffer[38] = (mapdiff & 0xFF00) >> 8;
@@ -1845,86 +1818,27 @@ void tastenfunktion(uint16_t Tastenwert)
                   
                case 8:     // up                             //  
                {
-                  if (digitalRead(END_B1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
+                  //uint8_t lage = AbschnittLaden_TS(pfeil4);
+                  if (pfeiltastecode == 0)
                   {
-                     if (pfeiltastecode == 0)
-                     {
-                        //OSZIB_LO();
-                        pfeiltastecode = UP;
-                        pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
-                        endimpulsdauer = TASTENENDIMPULSDAUER;
-                        tastaturstep = MB_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
-
-                        digitalWriteFast(MB_EN,LOW);
-                        digitalWriteFast(MB_RI,HIGH);
-
-                     }
-                  }
-               }break;
-
-               case 2:    // down                                //Menu rueckwaertsschalten
-               {
-                  if (digitalRead(END_B0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
-                  {
-                     if (pfeiltastecode == 0)
-                     {
-                        pfeiltastecode = DOWN;
-                        pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
-                        endimpulsdauer = TASTENENDIMPULSDAUER;
-                        pfeilrampcounter = 0;
-                        tastaturstep = MB_STEP;
-
-                        digitalWriteFast(MB_RI,LOW);
-                        digitalWriteFast(MB_EN,LOW);
-                        
-                     }
-                  }
-                  
-                    
-               }break;
-                  
-                   
-               case 4:   // left
-               {
-                  if (digitalRead(END_A0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
-                  {     
-                        if (pfeiltastecode == 0)
-                        {
-                           pfeiltastecode = LEFT;
-                           pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
-                           pfeilrampcounter = 0;
-                           endimpulsdauer = TASTENENDIMPULSDAUER;
-                           tastaturstep = MA_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
-
-                           digitalWriteFast(MA_EN,LOW);
-                           digitalWriteFast(MA_RI,LOW);
-                        }
+                     //OSZIB_LO();
+                     pfeiltastecode = 2;
+                     pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
+                     endimpulsdauer = TASTENENDIMPULSDAUER;
                      
+                     tastaturstep = MB_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
+
+                     digitalWriteFast(MB_EN,LOW);
+                     digitalWriteFast(MB_RI,HIGH);
+
+                     //digitalWriteFast(MB_STEP,LOW);
+
+
+
                   }
+               }break;
                   
-
-               } break; // case 4
-                  
-                      
-               case 6: // right
-               {
-                  if (digitalRead(END_A1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
-                  {
-                     if (pfeiltastecode == 0)
-                     { 
-                        pfeiltastecode = RIGHT;
-                        pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
-                        pfeilrampcounter = 0;
-                        endimpulsdauer = TASTENENDIMPULSDAUER;
-                        tastaturstep = MA_STEP;
-
-                        digitalWriteFast(MA_RI,HIGH);
-                        digitalWriteFast(MA_EN,LOW);
-                     }
-                  }
-               } break; // case 6
-
-              case 3:   //
+               case 3:   //
                {
                   //uint8_t lage = AbschnittLaden_TS(drillup);
                   if (pfeiltastecode == 0)
@@ -1934,7 +1848,42 @@ void tastenfunktion(uint16_t Tastenwert)
                      endimpulsdauer = TASTENENDIMPULSDAUER;
                   }
                }break;
+                  
+               case 4:   // left
+               {
+                  if (digitalRead(END_A0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
+                  {
+                     if (tastaturanschlagstatus & (1 << (END_A0_PIN)))// Schlitten war, aber ist nicht mehr am Anschlag
+                     {
+                        tastaturanschlagstatus &= ~(1 << END_A0); // Bit fuer Anschlag A0 zuruecksetzen
 
+                     }
+                     else
+                     {
+                     
+                        if (pfeiltastecode == 0)
+                        {
+                           pfeiltastecode = 3;
+                           pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
+                           pfeilrampcounter = 0;
+                           endimpulsdauer = TASTENENDIMPULSDAUER;
+                           tastaturstep = MA_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
+
+                           digitalWriteFast(MA_EN,LOW);
+                           digitalWriteFast(MA_RI,LOW);
+                           
+                           digitalWriteFast(MA_STEP,LOW);
+                        }
+                     }
+                  }
+                  else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag A0
+                  {
+                     //digitalWriteFast(MA_EN,HIGH);
+                  }
+
+               } break; // case Vortag
+                  
+                  
                case 5:                        // Ebene tiefer
                {
                   // Serial.printf("Taste 5\n");
@@ -1942,11 +1891,35 @@ void tastenfunktion(uint16_t Tastenwert)
                   // SPI_out2data(102,16);
                   if (pfeiltastecode == 0)
                   {
+                     
+                     
+
                      //haltfunktion();
                   }
                   
                }break;
-              
+                  
+               case 6: // right
+               {
+                  //uint8_t lage = AbschnittLaden_TS(pfeil1);
+                  //if (digitalRead(END_A0_PIN)) 
+                  {
+                  if (pfeiltastecode == 0)
+                  {
+                     
+                     pfeiltastecode = 1;
+                     pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
+                     endimpulsdauer = TASTENENDIMPULSDAUER;
+                     tastaturstep = MA_STEP;
+
+                     digitalWriteFast(MA_RI,HIGH);
+                     digitalWriteFast(MA_EN,LOW);
+
+                  }
+                  }
+                   
+               } break; // case Folgetag
+                  
                   
                case 7: // Joystick on/off
                {
@@ -1979,10 +1952,30 @@ void tastenfunktion(uint16_t Tastenwert)
                   joystickbuffer[3] = maxminstatus;
                   //SPI_out2data(102,spijoystickdata); //Anzeige
                   uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
-               }break;
+               }
+               break;
                   
                   
- 
+               case 2:    // down                                //Menu rueckwaertsschalten
+               {
+                  //uint8_t lage = AbschnittLaden_TS(pfeil2);
+                  if (pfeiltastecode == 0)
+                  {
+                     pfeiltastecode = 4;
+                     pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
+                     endimpulsdauer = TASTENENDIMPULSDAUER;
+
+                     tastaturstep = MB_STEP;
+
+                     digitalWriteFast(MB_EN,LOW);
+                     digitalWriteFast(MB_RI,LOW);
+
+                     //digitalWriteFast(MB_STEP,LOW);
+                  }
+                  
+                    
+               }
+                  break;
                   
                case 9:
                {
@@ -2023,6 +2016,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         joystickbuffer[56] = (calibminA & 0xFF00)>>8; 
                         joystickbuffer[57] = calibminA & 0x00FF;
                         
+                        // ???
                          calibmaxB  = potmitteB;
                         joystickbuffer[42] = (calibmaxB & 0xFF00)>>8; 
                         joystickbuffer[43] = calibmaxB & 0x00FF;
@@ -2037,7 +2031,7 @@ void tastenfunktion(uint16_t Tastenwert)
                      
                   }
                   joystickbuffer[0] = 0xAE;
-                  //joystickbuffer[2] = analogtastaturstatus;
+                  joystickbuffer[2] = analogtastaturstatus;
                   //SPI_out2data(102,spijoystickdata);
                   joystickbuffer[3] = maxminstatus;
                   uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
@@ -2505,8 +2499,9 @@ out_data[0] = 0xFF; // sync
   out_data[12] = 106;
   out_data[14] = 107;
 */
-/*
+
 // OLED
+/*
 u8g2.setBusClock(1000000);
  u8g2.begin();
    u8g2.setFont(u8g2_font_helvB12_tr);
@@ -2525,7 +2520,7 @@ u8g2.setBusClock(1000000);
   u8g2.firstPage();
 */
 
-SPI.begin();
+//SPI.begin();
 out_data[0] = 0xFF;
 uint8_t eepromaddress = EEPROMCALIB;
 //SPI_out2data(103,EEPROM.read(eepromaddress+1));
@@ -2557,8 +2552,8 @@ void loop()
    if (sinceblink > 1000)
    {
       //lcd.setCursor(0, 1);
-      //   startminH = (potminA & 0xFF00)>>8;
-      //   startminL = potminA & 0x00FF;
+   //   startminH = (potminA & 0xFF00)>>8;
+   //   startminL = potminA & 0x00FF;
       //OSZIA_TOGG();
        if(analogtastaturstatus & (1<<JOYSTIICK_ON))
        {
@@ -2594,6 +2589,8 @@ void loop()
       // OLED
       /*
       u8g2.firstPage();
+      do
+      {
       digitalWriteFast(23,!(digitalRead(23)));
       loopcounter1 = 0;
       wertcounter++;
@@ -2610,6 +2607,7 @@ void loop()
       u8g2 .print(u8x8_u8toa(wertcounter, 3));
       u8g2.updateDisplayArea(0,3,4,2);
       }
+      }while (u8g2.nextPage());
       // OLED
       */
 
@@ -2955,9 +2953,7 @@ void loop()
                tastenwert = readTastatur() / 4; //adc->adc0->analogRead(TASTATURPIN);
                //tastenwert = 99;
                tastenfunktion(tastenwert);
-               //joystickWertArray[joystickindexA & 0x03] = (readJoystick(joystickPinArray[joystickindexA & 0x03]) / 4);
-               //joystickfunktionA();
-               //SPI_out2data(101,tastenwert);
+               
                
                   
             }
@@ -3269,7 +3265,6 @@ void loop()
             // // Serial.printf("\n****************************************\n");
             // // Serial.printf("C0 Abschnitt lage: %d abschnittnummer: %d richtung: %d\n",lage,abschnittnummer, richtung);
             // // Serial.printf("****************************************\n");
-            
             ladeposition = 0;
             endposition = 0xFFFF;
             cncstatus = 0;
@@ -3861,10 +3856,6 @@ void loop()
       AnschlagVonMotor(0); // Bewegung anhalten
    }
 
-   
-
-
-
    // #pragma mark Anschlag   Motor B
    //  **************************************
    //  * Anschlag Motor B *
@@ -3894,7 +3885,7 @@ void loop()
    // AnschlagVonMotor(2);
 
    // Anschlag C0
-   if (digitalRead(END_A1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag C0
+   if (digitalRead(END_C0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag C0
    {
       if (anschlagstatus & (1 << END_C0))
       {
@@ -3914,7 +3905,7 @@ void loop()
    // AnschlagVonMotor(3);
 
    // Anschlag D0
-   if (digitalRead(END_B1_PIN)) // Schlitten nicht am Anschlag D0
+   if (digitalRead(END_D0_PIN)) // Schlitten nicht am Anschlag D0
    {
       if (anschlagstatus & (1 << END_D0))
       {
