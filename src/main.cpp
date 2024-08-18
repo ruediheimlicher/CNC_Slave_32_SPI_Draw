@@ -701,10 +701,23 @@ void tastaturtimerFunktion(void) // TASTENSTARTIMPULSDAUER
          }break;
          case MB_STEP:  
          {
-            if ((digitalRead(END_B0_PIN)   || pfeiltastecode == UP))
+            
+            if (digitalRead(END_B0_PIN) )//  || (pfeiltastecode == UP))
+            {
+               if (digitalRead(END_B1_PIN) || (pfeiltastecode == DOWN))//
+               {
+               tastaturTimer.update(IMPULSBREITE);
+               digitalWriteFast(tastaturstep,HIGH);
+               }
+
+            }
+            else if (pfeiltastecode == UP)
+            
             {
                tastaturTimer.update(IMPULSBREITE);
                digitalWriteFast(tastaturstep,HIGH);
+
+
             }
          }break;  
       }// switch
@@ -1597,7 +1610,7 @@ void joysticktimerBFunktion(void)
      
       if (digitalRead(END_B0_PIN)) //|| (digitalRead(MB_RI) == HIGH))// kein Anschlag
          {
-            if (digitalRead(END_B1_PIN) || (digitalRead(MB_RI) == LOW))// Kein Anschlag an A1 oder Richtung von A1 weg
+            if ((digitalRead(END_B1_PIN) ) || (digitalRead(MB_RI) == LOW))// Kein Anschlag an A1 oder Richtung von A1 weg
             {
                joysticktimerB.update(JOYSTICKIMPULS);
                digitalWriteFast(MB_STEP,HIGH); // Impuls starten
@@ -1848,18 +1861,29 @@ void tastenfunktion(uint16_t Tastenwert)
                      }
                   }
                }break;
-                  
-               case 3:   //
+
+               case 2:    // down                                //Menu rueckwaertsschalten
                {
-                  //uint8_t lage = AbschnittLaden_TS(drillup);
-                  if (pfeiltastecode == 0)
+                  if (digitalRead(END_B0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
                   {
-                     pfeiltastecode = 22;
-                     pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
-                     endimpulsdauer = TASTENENDIMPULSDAUER;
+                     if (pfeiltastecode == 0)
+                     {
+                        pfeiltastecode = DOWN;
+                        pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
+                        endimpulsdauer = TASTENENDIMPULSDAUER;
+                        pfeilrampcounter = 0;
+                        tastaturstep = MB_STEP;
+
+                        digitalWriteFast(MB_RI,LOW);
+                        digitalWriteFast(MB_EN,LOW);
+                        
+                     }
                   }
+                  
+                    
                }break;
                   
+                   
                case 4:   // left
                {
                   if (digitalRead(END_A0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
@@ -1881,18 +1905,7 @@ void tastenfunktion(uint16_t Tastenwert)
 
                } break; // case 4
                   
-               case 5:                        // Ebene tiefer
-               {
-                  // Serial.printf("Taste 5\n");
-                  OSZIA_TOGG();
-                  // SPI_out2data(102,16);
-                  if (pfeiltastecode == 0)
-                  {
-                     //haltfunktion();
-                  }
-                  
-               }break;
-                  
+                      
                case 6: // right
                {
                   if (digitalRead(END_A1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
@@ -1910,7 +1923,30 @@ void tastenfunktion(uint16_t Tastenwert)
                      }
                   }
                } break; // case 6
+
+              case 3:   //
+               {
+                  //uint8_t lage = AbschnittLaden_TS(drillup);
+                  if (pfeiltastecode == 0)
+                  {
+                     pfeiltastecode = 22;
+                     pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
+                     endimpulsdauer = TASTENENDIMPULSDAUER;
+                  }
+               }break;
+
+               case 5:                        // Ebene tiefer
+               {
+                  // Serial.printf("Taste 5\n");
+                  OSZIA_TOGG();
+                  // SPI_out2data(102,16);
+                  if (pfeiltastecode == 0)
+                  {
+                     //haltfunktion();
+                  }
                   
+               }break;
+              
                   
                case 7: // Joystick on/off
                {
@@ -1946,26 +1982,7 @@ void tastenfunktion(uint16_t Tastenwert)
                }break;
                   
                   
-               case 2:    // down                                //Menu rueckwaertsschalten
-               {
-                  if (digitalRead(END_B0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
-                  {
-                     if (pfeiltastecode == 0)
-                     {
-                        pfeiltastecode = DOWN;
-                        pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
-                        endimpulsdauer = TASTENENDIMPULSDAUER;
-                        pfeilrampcounter = 0;
-                        tastaturstep = MB_STEP;
-
-                        digitalWriteFast(MB_RI,LOW);
-                        digitalWriteFast(MB_EN,LOW);
-                        
-                     }
-                  }
-                  
-                    
-               }break;
+ 
                   
                case 9:
                {
