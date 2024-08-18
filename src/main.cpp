@@ -440,7 +440,7 @@ uint8_t maxminstatus = 0; // 0 wenn max, min fixiert
 
 #define JOYSTICKSTARTIMPULS   200 // impuls bei Start Joystick von Tastatur aus
 #define JOYSTICKIMPULS        200 // impulsdauer
-#define JOYSTICKTOTBEREICH    10
+#define JOYSTICKTOTBEREICH    15
 //#define JOYSTICKMINIMPULS     1000
 #define JOYSTICKMAXDIFF       4800
 #define JOYSTICKMAXTICKS      6000
@@ -2413,7 +2413,7 @@ void setup()
    potminA = potmitteA;
    potmaxA = potmitteA;
 
-   potmitteB = fixjoystickMitte(POTB_PIN);
+   potmitteB = potmitteA;//fixjoystickMitte(POTB_PIN);
    potwertB = potmitteB;
    potminB = potmitteB;
    potmaxB = potmitteB;
