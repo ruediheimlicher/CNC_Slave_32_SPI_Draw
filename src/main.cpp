@@ -1574,7 +1574,7 @@ void joysticktimerAFunktion(void)
 void joysticktimerBFunktion(void)
 {
    
-   if(maxminstatus & (1<<MAX_A))
+   if((maxminstatus & (1<<MAX_A))  && (digitalRead(END_B0_PIN)))
    {
       return;
    }
