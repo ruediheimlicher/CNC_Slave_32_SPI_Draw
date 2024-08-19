@@ -440,7 +440,7 @@ uint8_t maxminstatus = 0; // 0 wenn max, min fixiert
 
 #define JOYSTICKSTARTIMPULS   200 // impuls bei Start Joystick von Tastatur aus
 #define JOYSTICKIMPULS        200 // impulsdauer
-#define JOYSTICKTOTBEREICH    15
+#define JOYSTICKTOTBEREICH    25
 //#define JOYSTICKMINIMPULS     1000
 #define JOYSTICKMAXDIFF       4800
 #define JOYSTICKMAXTICKS      6000
