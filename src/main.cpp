@@ -54,8 +54,19 @@ U8G2_SSD1327_WS_128X128_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 10, /* dc=*/ 9, /* re
 // refresh
 // https://github.com/olikraus/u8g2/blob/master/sys/arduino/u8g2_full_buffer/FontUsage/FontUsage.ino#L441
 
-//#include <LiquidCrystal_I2C.h> // auch in Makefile angeben!!!
 
+struct oled_struct
+{
+   uint8_t x;
+   uint8_t y;
+   uint16_t data;
+   uint8_t aktiv;
+};
+
+struct oled_struct tastestruct;
+
+
+struct oled_struct indexstruct;
 
 // von VS_RobotAuto_T
 //#include <Adafruit_GFX.h>
@@ -1825,11 +1836,13 @@ void tastenfunktion(uint16_t Tastenwert)
             {
                Taste=Tastenwahl(Tastenwert);
             }
+            tastestruct.aktiv = 1;
+            tastestruct.data = Taste;
             //u8g2.setCursor(90,60);
             //u8g2.print("     ");
-            u8g2.setCursor(90,60);
-            u8g2.print(Taste);
-            u8g2.sendBuffer();
+            //u8g2.setCursor(90,60);
+            //u8g2.print(Taste);
+            //u8g2.sendBuffer();
 
             // Serial.printf("Tastenwert: %d Taste: %d \n",Taste,Tastenwert);
             tastaturcounter=0;
@@ -2339,6 +2352,14 @@ void stopTask(uint8_t emergency) // reset
    
 }
 
+void oled_setInt(uint8_t x,uint8_t y, uint16_t data)
+{
+   u8g2.setCursor(x,y);
+   u8g2.print(data);
+   u8g2.sendBuffer();
+
+}
+
 void setup()
 {
    eeprom_initialize();
@@ -2575,6 +2596,9 @@ u8g2.setBitmapMode(1);
 
 u8g2.sendBuffer();
 
+tastestruct.x = 90;
+tastestruct.y = 60;
+tastestruct.aktiv  = 0;
 
 }
 
@@ -2679,7 +2703,13 @@ void loop()
       */
       // OLED
       
-   
+      if (tastestruct.aktiv)
+      {
+         tastestruct.aktiv = 0;
+         u8g2.setCursor(tastestruct.x,tastestruct.y);
+         u8g2.print(tastestruct.data);
+         u8g2.sendBuffer();
+      }
 
 
       sincelastjoystickdata = 0;
@@ -3550,7 +3580,7 @@ void loop()
          case 0xF1: // reset
          {
             u8g2.setCursor(90,80);
-            u8g2.print("xxxx");
+            u8g2.print("   ");
             u8g2.sendBuffer();
             // Serial.printf("F1 reset\n");
             uint8_t i = 0, k = 0;
