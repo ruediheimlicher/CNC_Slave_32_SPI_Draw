@@ -48,6 +48,10 @@
 #include <Wire.h>
 #include <util/delay.h>
 
+#include <U8g2lib.h>
+
+U8G2_SSD1327_WS_128X128_1_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 8);
+
 //#include <LiquidCrystal_I2C.h> // auch in Makefile angeben!!!
 
 
@@ -56,7 +60,9 @@
 //#include <Adafruit_SSD1306.h>
 //#include <LiquidCrystal_I2C.h>
 
-//#include <U8g2lib.h>
+//
+
+//#include <MUIU8g2.h>
 
 #include "main.h"
 //#include "display.h"
@@ -2332,7 +2338,11 @@ void setup()
 
    //pinMode(23,OUTPUT);
   pinMode(SS,OUTPUT);
-  digitalWriteFast(SS, HIGH);
+  //digitalWriteFast(SS, HIGH);
+
+   u8g2.begin();
+  u8g2.setFont(u8g2_font_helvB12_tr);
+
 
    adc->adc0->setAveraging(8); // set number of averages
    adc->adc0->setResolution(10);
@@ -2592,26 +2602,27 @@ void loop()
    if (sincelastjoystickdata > 500) // millis
    {
       // OLED
-      /*
-      u8g2.firstPage();
-      digitalWriteFast(23,!(digitalRead(23)));
-      loopcounter1 = 0;
-      wertcounter++;
-      if(wertcounter%2==0)
+     u8g2.firstPage();
+      //    digitalWriteFast(23,!(digitalRead(23)));
+      wert++;
+      if(wert > 60)
       {
-      wert = map(wertcounter,0,255,0,60);
-      u8g2.drawFrame(60,50,12,h);
-      u8g2.drawBox(61,50+h-wert,10,wert);
-      u8g2.updateDisplayArea(7,6,2,8);
+        wert = 0;
       }
-      else 
-      {
-       u8g2.setCursor(4, 40);
-      u8g2 .print(u8x8_u8toa(wertcounter, 3));
-      u8g2.updateDisplayArea(0,3,4,2);
-      }
+      do {
+        u8g2.setCursor(0, 20);
+        u8g2.print(F("LCD_teensy4"));
+        u8g2.setCursor(0, 40);
+        u8g2.print(F("teensy4_PIO"));
+        u8g2.setCursor(0, 60);
+        u8g2 .print(u8x8_u8toa(loopcounter1, 3));
+        u8g2.drawFrame(60,50,12,h);
+        u8g2.drawBox(61,50+h-wert,10,wert);
+      } while ( u8g2.nextPage() );
+      
       // OLED
-      */
+      
+   
 
 
       sincelastjoystickdata = 0;
