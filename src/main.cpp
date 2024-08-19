@@ -7,7 +7,7 @@
 /// @n
 /// @n
 /// @n @a      Developed with [embedXcode+](https://embedXcode.weebly.com)
-///
+/// 
 /// @author      Ruedi Heimlicher
 /// @author      Ruedi Heimlicher
 /// @date      06.05.2020 21:02
@@ -112,9 +112,9 @@ uint16_t  posregister[8][8]; // Aktueller screen: werte fuer page und darauflieg
 const int chipSelect = 14;
 
 // https://registry.platformio.org/libraries/fmalpartida/LiquidCrystal/examples/HelloWorld_i2c/HelloWorld_i2c.pde
-//LiquidCrystal_I2C lcd(0x38); 
-LiquidCrystal_I2C lcd(39,20,4); // 0x27 > 39
-
+/*
+//LiquidCrystal_I2C lcd(39,20,4); // 0x27 > 39
+*/
 #include "bresenham.h"
 
 #include <EEPROM.h>
@@ -518,7 +518,7 @@ volatile uint16_t           rampimpulsdauer = TASTENSTARTIMPULSDAUER;
 
  
 
-//U8G2_SSD1327_WS_128X128_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 14, /* dc=*/ 10, /* reset=*/ -1);
+// U8G2_SSD1327_WS_128X128_1_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 8);
 
 uint16_t loopcounter0 = 0;
 uint16_t loopcounter1 = 0;
