@@ -22,7 +22,7 @@
  // neu 200730
  #define MC_STEP        6
  #define MC_RI          7
- #define MC_EN          8
+ #define MC_EN          7
  
  //Pins 
 

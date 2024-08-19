@@ -50,7 +50,7 @@
 
 #include <U8g2lib.h>
 
-U8G2_SSD1327_WS_128X128_1_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 8);
+U8G2_SSD1327_WS_128X128_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 8);
 
 //#include <LiquidCrystal_I2C.h> // auch in Makefile angeben!!!
 
