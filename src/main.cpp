@@ -54,7 +54,7 @@
 // von VS_RobotAuto_T
 //#include <Adafruit_GFX.h>
 //#include <Adafruit_SSD1306.h>
-#include <LiquidCrystal_I2C.h>
+//#include <LiquidCrystal_I2C.h>
 
 //#include <U8g2lib.h>
 
@@ -113,7 +113,7 @@ const int chipSelect = 14;
 
 // https://registry.platformio.org/libraries/fmalpartida/LiquidCrystal/examples/HelloWorld_i2c/HelloWorld_i2c.pde
 //LiquidCrystal_I2C lcd(0x38); 
-LiquidCrystal_I2C lcd(39,20,4); // 0x27 > 39
+//LiquidCrystal_I2C lcd(39,20,4); // 0x27 > 39
 
 #include "bresenham.h"
 
