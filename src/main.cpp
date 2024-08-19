@@ -51,6 +51,8 @@
 #include <U8g2lib.h>
 
 U8G2_SSD1327_WS_128X128_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 8);
+// refresh
+// https://github.com/olikraus/u8g2/blob/master/sys/arduino/u8g2_full_buffer/FontUsage/FontUsage.ino#L441
 
 //#include <LiquidCrystal_I2C.h> // auch in Makefile angeben!!!
 
@@ -797,7 +799,11 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    micro = AbschnittDaten[26];
 
    uint16_t index = (AbschnittDaten[18] << 8) | AbschnittDaten[19];
-
+   //u8g2.setCursor(90,80);
+   //u8g2.print("     ");
+   u8g2.setCursor(90,80);
+   u8g2.print(index);
+   u8g2.sendBuffer();
    if (AbschnittDaten[35] == 1)
    {
       // // Serial.printf("+++ +++ +++ \t\t\t index: %d AbschnittLaden_bres WENDEPUNKT \n",index);
@@ -1790,6 +1796,7 @@ void tastenfunktion(uint16_t Tastenwert)
 
          if (analogtastaturstatus & (1<<TASTE_ON)) // Taste schon gedrueckt
          {
+
             //();
          }
          else // Taste neu gedrückt
@@ -1797,6 +1804,9 @@ void tastenfunktion(uint16_t Tastenwert)
             uint8_t t = Tastenwert & 0xFF;
             //SPI_out2data(102,t);
             //OSZIA_LO();
+
+            
+
             analogtastaturstatus |= (1<<TASTE_ON); // nur einmal
             if(Tastenwert > 250)
             {
@@ -1815,7 +1825,11 @@ void tastenfunktion(uint16_t Tastenwert)
             {
                Taste=Tastenwahl(Tastenwert);
             }
-            
+            //u8g2.setCursor(90,60);
+            //u8g2.print("     ");
+            u8g2.setCursor(90,60);
+            u8g2.print(Taste);
+            u8g2.sendBuffer();
 
             // Serial.printf("Tastenwert: %d Taste: %d \n",Taste,Tastenwert);
             tastaturcounter=0;
@@ -2161,6 +2175,9 @@ void tastenfunktion(uint16_t Tastenwert)
 
     
          analogtastaturstatus &= ~(1<<TASTE_ON);
+         u8g2.setCursor(90,60);
+         u8g2.print("     ");
+         u8g2.sendBuffer();
       }
    }
 }
@@ -2339,9 +2356,9 @@ void setup()
    //pinMode(23,OUTPUT);
   pinMode(SS,OUTPUT);
   //digitalWriteFast(SS, HIGH);
-
+   u8g2.setBusClock(8000000);
    u8g2.begin();
-  u8g2.setFont(u8g2_font_helvB12_tr);
+  //u8g2.setFont(u8g2_font_helvB12_tr);
 
 
    adc->adc0->setAveraging(8); // set number of averages
@@ -2544,6 +2561,19 @@ calibmaxA = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
 
 calibminB = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
 calibmaxB = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
+u8g2.clearBuffer();  
+u8g2.setFontMode(1);
+u8g2.setFont(u8g2_font_cu12_hr);		  
+u8g2.setCursor(0, 20);
+u8g2.print(F("LCD_teensy4"));
+u8g2.setCursor(0, 40);
+u8g2.print(F("teensy4_PIO"));
+
+u8g2.drawFrame(60,50,12,h);
+u8g2.setFontMode(0);
+u8g2.setBitmapMode(1);
+
+u8g2.sendBuffer();
 
 
 }
@@ -2602,6 +2632,33 @@ void loop()
    if (sincelastjoystickdata > 500) // millis
    {
       // OLED
+      //u8g2.setFontMode(0);
+      //u8g2.setCursor(100,60);
+      //u8g2 .print(u8x8_u8toa(wert, 3));
+
+     
+     // u8g2.drawBox(61,50+h-wert,10,wert);
+      /*
+      wert++;
+      if(wert > 20)
+      {
+         u8g2.setDrawColor(0);
+        u8g2.drawBox(61,50+h-wert,10,wert-2);
+        wert = 0;
+        u8g2.setDrawColor(1);
+
+      }
+      u8g2.setCursor(90,60);
+      
+      //u8g2.setFontMode(0);
+      u8g2.print("     ");
+      //u8g2.setFont(u8g2_font_cu12_hr);	
+      u8g2.setCursor(90,60);
+      u8g2.print(wert);
+      u8g2.sendBuffer();
+      */
+
+       /*
      u8g2.firstPage();
       //    digitalWriteFast(23,!(digitalRead(23)));
       wert++;
@@ -2619,7 +2676,7 @@ void loop()
         u8g2.drawFrame(60,50,12,h);
         u8g2.drawBox(61,50+h-wert,10,wert);
       } while ( u8g2.nextPage() );
-      
+      */
       // OLED
       
    
@@ -3492,6 +3549,9 @@ void loop()
             ////#pragma mark F1 reset
          case 0xF1: // reset
          {
+            u8g2.setCursor(90,80);
+            u8g2.print("xxxx");
+            u8g2.sendBuffer();
             // Serial.printf("F1 reset\n");
             uint8_t i = 0, k = 0;
             for (k = 0; k < RINGBUFFERTIEFE; k++)
