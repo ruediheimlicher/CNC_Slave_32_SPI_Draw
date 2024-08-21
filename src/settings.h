@@ -230,8 +230,13 @@
 # define RAMPDELAY 10 // delay fuer Reduktion Impulsdauer
 
 
+// display
+#define TASTE_Y  50
+#define TASTE_X  60
+#define CNC_Y    60
 
-
+#define JOYSTICK_Y  75
+#define CALIB_Y  100
 
 /*
 #define  HYP_BYTE_H  22 // Hypotenuse

@@ -50,10 +50,10 @@
 
 #include <U8g2lib.h>
 
-U8G2_SSD1327_WS_128X128_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 10, /* dc=*/ 9, /* reset=*/ 8);
+U8G2_SSD1327_WS_128X128_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 10, /* dc=*/ 14, /* reset=*/ 12);
 // refresh
 // https://github.com/olikraus/u8g2/blob/master/sys/arduino/u8g2_full_buffer/FontUsage/FontUsage.ino#L441
-
+uint8_t charh = 0;
 
 struct oled_struct
 {
@@ -64,6 +64,8 @@ struct oled_struct
 };
 
 struct oled_struct tastestruct;
+
+
 
 
 struct oled_struct indexstruct;
@@ -138,9 +140,7 @@ const int chipSelect = 14;
 
 #include <EEPROM.h>
 #include "eeprom.c"
-//#include "U8x8lib.h"
 
-//#include "rgb_lcd.h"
 
 // Set parameters
 
@@ -812,6 +812,10 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    uint16_t index = (AbschnittDaten[18] << 8) | AbschnittDaten[19];
    //u8g2.setCursor(90,80);
    //u8g2.print("     ");
+   //u8g2.setDrawColor(0);
+   //u8g2.drawBox(90,80-charh,15,charh);
+   //u8g2.setDrawColor(1);
+
    u8g2.setCursor(90,80);
    u8g2.print(index);
    u8g2.sendBuffer();
@@ -1992,6 +1996,14 @@ void tastenfunktion(uint16_t Tastenwert)
                      maxminstatus &= ~(1<<MAX_A);
                      OSZIA_HI();
                      spijoystickdata &= ~(1<<7);
+
+                     //u8g2.setCursor(0, CALIB_Y);
+                     u8g2.setDrawColor(0);
+                     u8g2.drawBox(0,JOYSTICK_Y-charh,80,2*(charh+4));
+                     u8g2.setDrawColor(1);
+
+                     //u8g2.print(F("xxxx"));
+                     u8g2.sendBuffer();
                   }
                   else 
                   {
@@ -2000,6 +2012,10 @@ void tastenfunktion(uint16_t Tastenwert)
                      joysticktimerA.begin(joysticktimerAFunktion,JOYSTICKSTARTIMPULS);
                      joysticktimerB.begin(joysticktimerBFunktion,JOYSTICKSTARTIMPULS);
                      spijoystickdata |= (1<<7); // an lcd schicken
+
+                     u8g2.setCursor(0, JOYSTICK_Y);
+                     u8g2.print(F("Joystick"));
+                     u8g2.sendBuffer();
                      //spidata &= ~(1<<7);
                     
                      //joystickindexA = 0;
@@ -2024,6 +2040,10 @@ void tastenfunktion(uint16_t Tastenwert)
                   {
                      if(maxminstatus & (1<<MAX_A)) // Kalibrierung eingeschaltet
                      {
+                        u8g2.setDrawColor(0);
+                        u8g2.drawBox(0,CALIB_Y-charh,80,(charh+4));
+                        u8g2.setDrawColor(1);
+                        u8g2.sendBuffer();
 
                         maxminstatus &= ~(1<<MAX_A);// Kalibrierung OFF
                         aaa = 11;
@@ -2043,6 +2063,10 @@ void tastenfunktion(uint16_t Tastenwert)
                      }
                      else
                      {
+                     u8g2.setCursor(0, CALIB_Y);
+                     u8g2.print(F("CALIB"));
+                     u8g2.sendBuffer();
+
                         spijoystickdata |= (1<<6);
                         spijoystickdata |= (1<<7);
                         maxminstatus |= (1<<MAX_A); // Kalibrierung ON
@@ -2188,8 +2212,13 @@ void tastenfunktion(uint16_t Tastenwert)
 
     
          analogtastaturstatus &= ~(1<<TASTE_ON);
-         u8g2.setCursor(90,60);
-         u8g2.print("     ");
+
+         // Tastennummer weg
+         u8g2.setDrawColor(0);
+         u8g2.drawBox(tastestruct.x,tastestruct.y-charh,10,charh);
+         u8g2.setDrawColor(1);
+         //u8g2.setCursor(90,60);
+         //u8g2.print("    ");
          u8g2.sendBuffer();
       }
    }
@@ -2584,22 +2613,43 @@ calibminB = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
 calibmaxB = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
 u8g2.clearBuffer();  
 u8g2.setFontMode(1);
-u8g2.setFont(u8g2_font_cu12_hr);		  
-u8g2.setCursor(0, 20);
-u8g2.print(F("LCD_teensy4"));
-u8g2.setCursor(0, 40);
-u8g2.print(F("teensy4_PIO"));
+// 
+u8g2.setFont(u8g2_font_helvR08_tr);
+u8g2.setCursor(0, 122);
+u8g2.print(F("LCD_teensy4_PIO"));
 
-u8g2.drawFrame(60,50,12,h);
+
+//u8g2.setFont(u8g2_font_cu12_hr);
+
+
+//u8g2.setFont(u8g2_font_t0_14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
+u8g2.setFont(u8g2_font_inr16_mr);	
+u8g2.setCursor(0, 20);
+u8g2.print(F("CNC Draw"));
+
+
+
+//u8g2.setCursor(0, 40);
+//u8g2.print(F("teensy4_PIO"));
+
+//u8g2.drawFrame(110,50,12,h);
 u8g2.setFontMode(0);
 u8g2.setBitmapMode(1);
+//u8g2.setFont(u8g2_font_t0_14_tr);
+//u8g2.setFont(u8g2_font_cu12_hr);
 
+u8g2.setFont(u8g2_font_helvR14_tr);
+charh = u8g2.getMaxCharHeight() ;
+
+u8g2.setCursor(0, TASTE_Y);
+u8g2.print(F("Taste:"));
 u8g2.sendBuffer();
 
-tastestruct.x = 90;
-tastestruct.y = 60;
+tastestruct.x = TASTE_X;
+tastestruct.y = TASTE_Y;
 tastestruct.aktiv  = 0;
 
+//indexstruct.x = 
 }
 
 // Add loop code
@@ -2682,25 +2732,7 @@ void loop()
       u8g2.sendBuffer();
       */
 
-       /*
-     u8g2.firstPage();
-      //    digitalWriteFast(23,!(digitalRead(23)));
-      wert++;
-      if(wert > 60)
-      {
-        wert = 0;
-      }
-      do {
-        u8g2.setCursor(0, 20);
-        u8g2.print(F("LCD_teensy4"));
-        u8g2.setCursor(0, 40);
-        u8g2.print(F("teensy4_PIO"));
-        u8g2.setCursor(0, 60);
-        u8g2 .print(u8x8_u8toa(loopcounter1, 3));
-        u8g2.drawFrame(60,50,12,h);
-        u8g2.drawBox(61,50+h-wert,10,wert);
-      } while ( u8g2.nextPage() );
-      */
+      
       // OLED
       
       if (tastestruct.aktiv)
@@ -2748,6 +2780,9 @@ void loop()
                   calibmaxA = maxsumA;
                   joystickbuffer[52] = (calibmaxA & 0xFF00)>>8; 
                   joystickbuffer[53] = calibmaxA & 0x00FF;
+                  u8g2.setCursor(80,CALIB_Y+10);
+                  u8g2.print(calibmaxA);
+                  //u8g2.sendBuffer();
                }
 
                joystickbuffer[54] = (minsumA & 0xFF00)>>8; 
@@ -2758,8 +2793,11 @@ void loop()
                   calibminA = minsumA;
                   joystickbuffer[56] = (calibminA & 0xFF00)>>8; 
                   joystickbuffer[57] = calibminA & 0x00FF;
+                  u8g2.setCursor(80,CALIB_Y);
+                  u8g2.print(calibminA);
                }
 
+               
                // Seite B
                joystickbuffer[40] = (maxsumB & 0xFF00)>>8; 
                joystickbuffer[41] = maxsumB & 0x00FF;
@@ -2779,9 +2817,10 @@ void loop()
                   calibminB = minsumB;
                   joystickbuffer[46] = (calibminB & 0xFF00)>>8; 
                   joystickbuffer[47] = calibminB & 0x00FF;
+                  
                }
 
-
+            u8g2.sendBuffer();
             }
 
 
@@ -3579,8 +3618,12 @@ void loop()
             ////#pragma mark F1 reset
          case 0xF1: // reset
          {
-            u8g2.setCursor(90,80);
-            u8g2.print("   ");
+            u8g2.setDrawColor(0);
+            u8g2.drawBox(90,80-charh,15,charh);
+            u8g2.setDrawColor(1);
+
+            //u8g2.setCursor(90,80);
+            //u8g2.print("   ");
             u8g2.sendBuffer();
             // Serial.printf("F1 reset\n");
             uint8_t i = 0, k = 0;
