@@ -22,13 +22,13 @@
  // neu 200730
  #define MC_STEP        6
  #define MC_RI          7
- #define MC_EN          7
+ #define MC_EN          8
  
  //Pins 
 
  #define MA_STEP        0
- #define MA_RI         1
- #define MA_EN         2
+ #define MA_RI          1
+ #define MA_EN          2
  
 // Stepper B
  #define MB_STEP         3
@@ -231,12 +231,15 @@
 
 
 // display
-#define TASTE_Y  50
+#define TASTE_Y  40
 #define TASTE_X  60
 #define CNC_Y    60
 
-#define JOYSTICK_Y  75
-#define CALIB_Y  100
+#define JOYSTICK_Y  60
+#define CALIB_Y  65
+#define CALIB_X  0
+#define CALIB_H   40
+#define CALIB_W   110
 
 /*
 #define  HYP_BYTE_H  22 // Hypotenuse

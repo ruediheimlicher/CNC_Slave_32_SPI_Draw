@@ -2041,7 +2041,10 @@ void tastenfunktion(uint16_t Tastenwert)
                      if(maxminstatus & (1<<MAX_A)) // Kalibrierung eingeschaltet
                      {
                         u8g2.setDrawColor(0);
-                        u8g2.drawBox(0,CALIB_Y-charh,80,(charh+4));
+                        u8g2.drawBox(70,JOYSTICK_Y-charh,50,charh);
+                        u8g2.drawBox(CALIB_X,CALIB_Y,CALIB_W,CALIB_H);
+                       // u8g2.drawBox(0,CALIB_Y-charh,80,(charh+4));
+
                         u8g2.setDrawColor(1);
                         u8g2.sendBuffer();
 
@@ -2063,8 +2066,9 @@ void tastenfunktion(uint16_t Tastenwert)
                      }
                      else
                      {
-                     u8g2.setCursor(0, CALIB_Y);
-                     u8g2.print(F("CALIB"));
+                     u8g2.setCursor(70, JOYSTICK_Y);
+                     u8g2.print(F("calib"));
+                     u8g2.drawFrame(CALIB_X,CALIB_Y,CALIB_W,CALIB_H);
                      u8g2.sendBuffer();
 
                         spijoystickdata |= (1<<6);
@@ -2205,7 +2209,7 @@ void tastenfunktion(uint16_t Tastenwert)
          //A0_ISR();  
             digitalWriteFast(MA_EN,HIGH);
             digitalWriteFast(MB_EN,HIGH);
-            digitalWriteFast(MC_EN,HIGH);
+          //  digitalWriteFast(MC_EN,HIGH);
             digitalWriteFast(MA_STEP,HIGH);
             digitalWriteFast(MB_STEP,HIGH);
             digitalWriteFast(MC_STEP,HIGH);
@@ -2622,8 +2626,8 @@ u8g2.print(F("LCD_teensy4_PIO"));
 //u8g2.setFont(u8g2_font_cu12_hr);
 
 
-//u8g2.setFont(u8g2_font_t0_14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
-u8g2.setFont(u8g2_font_inr16_mr);	
+u8g2.setFont(u8g2_font_helvR14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
+//u8g2.setFont(u8g2_font_inr16_mr);	
 u8g2.setCursor(0, 20);
 u8g2.print(F("CNC Draw"));
 
@@ -2638,7 +2642,7 @@ u8g2.setBitmapMode(1);
 //u8g2.setFont(u8g2_font_t0_14_tr);
 //u8g2.setFont(u8g2_font_cu12_hr);
 
-u8g2.setFont(u8g2_font_helvR14_tr);
+u8g2.setFont(u8g2_font_helvR12_tr);
 charh = u8g2.getMaxCharHeight() ;
 
 u8g2.setCursor(0, TASTE_Y);
@@ -2696,7 +2700,7 @@ void loop()
       //      // lcd.print(String(loopLED));
       
       //digitalWriteFast(LOOPLED,!(digitalRead(LOOPLED)));
-
+      digitalWriteFast(MC_EN, !(digitalRead(MC_EN)));
 
       parallelcounter += 2;
       //      lcd.setCursor(14,0);
@@ -2780,7 +2784,7 @@ void loop()
                   calibmaxA = maxsumA;
                   joystickbuffer[52] = (calibmaxA & 0xFF00)>>8; 
                   joystickbuffer[53] = calibmaxA & 0x00FF;
-                  u8g2.setCursor(80,CALIB_Y+10);
+                  u8g2.setCursor(10,CALIB_Y+2*charh);
                   u8g2.print(calibmaxA);
                   //u8g2.sendBuffer();
                }
@@ -2793,7 +2797,7 @@ void loop()
                   calibminA = minsumA;
                   joystickbuffer[56] = (calibminA & 0xFF00)>>8; 
                   joystickbuffer[57] = calibminA & 0x00FF;
-                  u8g2.setCursor(80,CALIB_Y);
+                  u8g2.setCursor(10,CALIB_Y+charh);
                   u8g2.print(calibminA);
                }
 
@@ -2807,6 +2811,8 @@ void loop()
                   calibmaxB = maxsumB;
                   joystickbuffer[42] = (calibmaxB & 0xFF00)>>8; 
                   joystickbuffer[43] = calibmaxB & 0x00FF;
+                  u8g2.setCursor(60,CALIB_Y+2*charh);
+                  u8g2.print(calibmaxB);
                }
 
                joystickbuffer[44] = (minsumB & 0xFF00)>>8; 
@@ -2817,10 +2823,11 @@ void loop()
                   calibminB = minsumB;
                   joystickbuffer[46] = (calibminB & 0xFF00)>>8; 
                   joystickbuffer[47] = calibminB & 0x00FF;
-                  
+                  u8g2.setCursor(60,CALIB_Y+charh);
+                  u8g2.print(calibminB);
                }
 
-            u8g2.sendBuffer();
+               u8g2.sendBuffer();
             }
 
 
