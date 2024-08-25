@@ -78,9 +78,9 @@
 #define LEFT        3
 #define DOWN        4
 
-#define RICHTUNG_A   0
-#define RICHTUNG_B   1
-#define RICHTUNG_C   2
+#define RICHTUNG_A   0 // Motor A pos
+#define RICHTUNG_B   1 // Motor B pos
+#define RICHTUNG_C   2 // 
 #define RICHTUNG_D   3
 
 #define MOTOR_A     0
@@ -235,11 +235,14 @@
 #define TASTE_X  60
 #define CNC_Y    60
 
+#define ANSCHLAG_X 70 
+#define ANSCHLAG_Y 60 
+
 #define JOYSTICK_Y  60
 #define CALIB_Y  65
 #define CALIB_X  0
 #define CALIB_H   40
-#define CALIB_W   110
+#define CALIB_W   115
 
 /*
 #define  HYP_BYTE_H  22 // Hypotenuse
