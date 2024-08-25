@@ -894,8 +894,8 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
    else
    {
-   //   richtung |= (1 << RICHTUNG_B); //** * / Rueckwarts
-      richtung &= ~(1 << RICHTUNG_A);
+      richtung |= (1 << RICHTUNG_C); //** * / Rueckwarts
+      //richtung &= ~(1 << RICHTUNG_A);
       digitalWriteFast(MA_RI, HIGH);
       //digitalWriteFast(MA_RI, LOW); 
       // lcd_putc('v');   // Vorwaerts
@@ -938,8 +938,8 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
    else
    {
-      richtung &= ~(1 << RICHTUNG_B);
-      //**richtung |= (1 << RICHTUNG_D);
+      //richtung &= ~(1 << RICHTUNG_B);
+      richtung |= (1 << RICHTUNG_D);
       digitalWriteFast(MB_RI, HIGH);
    }
 
@@ -973,13 +973,13 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    // richtung=0;
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
-      richtung |= (1 << RICHTUNG_C); // Rueckwarts
+      // ***richtung |= (1 << RICHTUNG_C); // Rueckwarts
       digitalWriteFast(MC_RI, LOW);
       // // Serial.printf("AbschnittLaden_bres C negativ\n");
    }
    else
    {
-      richtung &= ~(1 << RICHTUNG_C);
+    // ***  richtung &= ~(1 << RICHTUNG_C);
       digitalWriteFast(MA_RI, HIGH);
       // // Serial.printf("AbschnittLaden_bres C positiv\n");
    }
@@ -1374,12 +1374,7 @@ void AnschlagVonMotor(const uint8_t motor)
                bres_counterB = 0;
                bres_delayB = 0;
 
-               /*
-                CounterA=0xFFFF;
-                CounterB=0xFFFF;
-                CounterC=0xFFFF;
-                CounterD=0xFFFF;
-                */
+
 
                ladeposition = 0;
                motorstatus = 0;
@@ -2010,7 +2005,7 @@ void tastenfunktion(uint16_t Tastenwert)
 
                         digitalWriteFast(MA_RI,HIGH);
                         digitalWriteFast(MA_EN,LOW);
-                        richtung |= (1<<RICHTUNG_B);
+                        richtung |= (1<<RICHTUNG_C);
                      }
                      if (digitalRead(END_A0_PIN)==0)
                      {
