@@ -894,7 +894,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
    else
    {
-      richtung |= (1 << RICHTUNG_B); // Rueckwarts
+   //   richtung |= (1 << RICHTUNG_B); //** * / Rueckwarts
       richtung &= ~(1 << RICHTUNG_A);
       digitalWriteFast(MA_RI, HIGH);
       //digitalWriteFast(MA_RI, LOW); 
@@ -931,13 +931,15 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    vz = 1;
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
-      richtung |= (1 << RICHTUNG_C); // Rueckwarts
+      richtung |= (1 << RICHTUNG_B); // Rueckwarts
+      //**richtung |= (1 << RICHTUNG_C); // ** Rueckwarts
       digitalWriteFast(MB_RI, LOW);  // lcd_putc('r');
       vz = -1;
    }
    else
    {
-      richtung |= (1 << RICHTUNG_D);
+      richtung &= ~(1 << RICHTUNG_B);
+      //**richtung |= (1 << RICHTUNG_D);
       digitalWriteFast(MB_RI, HIGH);
    }
 
@@ -1931,7 +1933,7 @@ void tastenfunktion(uint16_t Tastenwert)
 
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,HIGH);
-                        richtung |= (1<<RICHTUNG_C);
+   // ***                     richtung |= (1<<RICHTUNG_C);
                      }
                      if (digitalRead(END_B0_PIN)==0)
                      {
@@ -1955,7 +1957,7 @@ void tastenfunktion(uint16_t Tastenwert)
 
                         digitalWriteFast(MB_RI,LOW);
                         digitalWriteFast(MB_EN,LOW);
-                        richtung |= (1<<RICHTUNG_D);
+             // **           richtung |= (1<<RICHTUNG_D);
 
                         if (digitalRead(END_B1_PIN)==0)
                         {
