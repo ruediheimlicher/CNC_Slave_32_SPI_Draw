@@ -70,6 +70,8 @@ struct oled_struct
 
 struct oled_struct tastestruct;
 void oled_delete(uint8_t x,uint8_t y,uint8_t l);
+void oled_fill(uint8_t x,uint8_t y,uint8_t l);
+void oled_frame(uint8_t x,uint8_t y,uint8_t l);
 
 struct oled_struct anschlagstruct;
 
@@ -894,11 +896,8 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
    else
    {
-      richtung |= (1 << RICHTUNG_C); //** * / Rueckwarts
-      //richtung &= ~(1 << RICHTUNG_A);
+      richtung |= (1 << RICHTUNG_C); //** * / Vorwarts
       digitalWriteFast(MA_RI, HIGH);
-      //digitalWriteFast(MA_RI, LOW); 
-      // lcd_putc('v');   // Vorwaerts
    }
 
    dataH &= (0x7F);                     // bit 8 entfernen
@@ -932,13 +931,11 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
       richtung |= (1 << RICHTUNG_B); // Rueckwarts
-      //**richtung |= (1 << RICHTUNG_C); // ** Rueckwarts
       digitalWriteFast(MB_RI, LOW);  // lcd_putc('r');
       vz = -1;
    }
    else
    {
-      //richtung &= ~(1 << RICHTUNG_B);
       richtung |= (1 << RICHTUNG_D);
       digitalWriteFast(MB_RI, HIGH);
    }
@@ -953,8 +950,6 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    out_data[STEPCOUNTERB_L] = StepCounterB & 0x00FF;
  
    DelayB = (AbschnittDaten[7] << 8) | AbschnittDaten[6];
-
-   // // Serial.printf("\nAbschnittLaden_bres index: %d StepCounterA  : %d DelayA: %d StepCounterB: %d DelayB: %d\n",index,StepCounterA, DelayA, StepCounterB, DelayB);
 
    CounterB = DelayB;
 
@@ -1220,217 +1215,201 @@ void AnschlagVonMotor(const uint8_t motor)
    */
    } // switch motor
    
+   
+   
+   // Strom OFF
+   
+   //analogWrite(DC_PWM, 0);
+   /*
+   u8g2.setCursor(anschlagstruct.x-20,anschlagstruct.y+40);
+   u8g2.print(richtung);
+   u8g2.print("*");
+   u8g2.print(motor);
+   u8g2.print("*");
+   u8g2.sendBuffer();
+   */
+   anschlagstruct.aktiv = 1;
+   anschlagstruct.data = richtung;
+   
+   //anschlagcount &= 0xFF;
+   
+   PWM = 0;
+
+   if (richtung & (1 << (RICHTUNG_A + motor))) // Richtung ist auf Anschlag A0+motor zu   (RICHTUNG_A ist 0)
    {
-      
-      // Strom OFF
-      
-      //analogWrite(DC_PWM, 0);
-      //u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
-      //anschlagstruct.aktiv = 1;
-      anschlagstruct.data = motor;
-     
-     //anschlagcount &= 0xFF;
-     
-     PWM = 0;
-
-     if (richtung & (1 << (RICHTUNG_A + motor))) // Richtung ist auf Anschlag A0 zu   (RICHTUNG_A ist 0)
+      anschlagcount++;
+      if (!(anschlagstatus & (1 << (END_A0 + motor)))) // Bit ist noch nicht gesetzt
       {
-         anschlagcount++;
-         if (!(anschlagstatus & (1 << (END_A0 + motor)))) // Bit ist noch nicht gesetzt
+         // cli();
+         
+         anschlagstatus |= (1 << (END_A0 + motor)); // Bit fuer Anschlag A0+motor setzen (END_A0 ist 4)
+
+         if (cncstatus & (1 << GO_HOME)) // nur eigene Seite abstellen
          {
-            // cli();
-            
-            // Serial.printf("\t*** Motor %d ist am anschlag angekommen\n", motor);
+            // Paralleler Schlitten gleichzeitig am Anschlag?
 
-            anschlagstatus |= (1 << (END_A0 + motor)); // Bit fuer Anschlag A0+motor setzen (END_A0 ist 4)
+            // Serial.printf("*** Anschlag Home motor %d\n", motor);
+            // lcd_putc('B');
+            //  code:
+            sendbuffer[0] = 0xB5 + motor;
 
-            if (cncstatus & (1 << GO_HOME)) // nur eigene Seite abstellen
+            if (motor < 2) // Stepperport 1
             {
-               // Paralleler Schlitten gleichzeitig am Anschlag?
+               // Serial.printf("Stepperport 1\n");
+               // STEPPERPORT_1 |= (1<<(MA_EN + motor));     // Motor 0,1 OFF
 
-               // Serial.printf("*** Anschlag Home motor %d\n", motor);
-               // lcd_putc('B');
-               //  code:
-               sendbuffer[0] = 0xB5 + motor;
-
-               if (motor < 2) // Stepperport 1
+               // Motor 0 ODER 1 OFF // andere Richtung kommt anschliessend von master
+               if(motor == 0)
                {
-                  // Serial.printf("Stepperport 1\n");
-                  // STEPPERPORT_1 |= (1<<(MA_EN + motor));     // Motor 0,1 OFF
-
-                  // Motor 0 ODER 1 OFF // andere Richtung kommt anschliessend von master
-                  if(motor == 0)
-                  {
-                     digitalWriteFast(MA_EN, HIGH);
-
-                  }
-                  else if(motor == 1)
-                  {
-                     digitalWriteFast(MB_EN, HIGH);
-                  }
-
-                  // STEPPERPORT_2 |= (1<<(MA_EN + motor + 2)); // Paralleler Motor 2,3 OFF
-                  //              StepCounterA=0;
-                  //              StepCounterB=0;
-                  xA = 0;
-                  yA = 0;
-                  xB = 0;
-                  yB = 0;
-
-                  bres_counterA = 0;
-                  bres_delayA = 0;
-
-                  bres_counterB = 0;
-                  bres_delayB = 0;
-                  deltafastdirectionA = 0;
-                  deltafastdelayA = 0;
-                  deltafastdirectionB = 0;
-                  deltafastdelayB = 0;
-
-                  //               CounterA=0xFFFF;
-                  //              CounterB=0xFFFF;
-               }
-               else // Stepperport 2
-               {
-                  // Serial.printf("Stepperport 2\n");
-                  //    STEPPERPORT_2 |= (1<<(MA_EN + motor));     // Motor 2,3 OFF
-                  //digitalWriteFast(MC_EN, HIGH);
-                  //digitalWriteFast(MD_EN, HIGH); // Paralleler Motor 0,1 OFF
-                  if(motor == 2)
-                  {
-                     digitalWriteFast(MC_EN, HIGH);
-                  }
-                  else if(motor == 3)
-                  {
-                     digitalWriteFast(MD_EN, HIGH);
-                  }
-
-                  StepCounterC = 0;
-                  //StepCounterD = 0;
-                  xC = 0;
-                  yC = 0;
-                  xC = 0;
-                  yD = 0;
-
-                  bres_counterC = 0;
-                  bres_delayC = 0;
-
-                  bres_counterC = 0;
-                  bres_delayC = 0;
-                  deltafastdirectionC = 0;
-                  deltafastdelayC = 0;
-
-                  //               CounterC=0xFFFF;
-                  //               CounterD=0xFFFF;
-               }
-               // cncstatus &= ~(1<<GO_HOME);
-               /*
-               digitalWriteFast(MA_EN,HIGH);
-               digitalWriteFast(MB_EN,HIGH);
-               digitalWriteFast(MC_EN,HIGH);
-               digitalWriteFast(MD_EN,HIGH);
-                */
-
-            }    // end GO_HOME
-            else // beide Seiten abstellen
-            {
-               cncstatus = 0;
-               sendbuffer[0] = 0xA5 + motor;
-
-               /*
-               if (motor < 2) // Stepperport 1
-               {
-                  // STEPPERPORT_1 |= (1<<(MA_EN + motor));     // Motor 0,1 OFF
                   digitalWriteFast(MA_EN, HIGH);
 
-                  // STEPPERPORT_2 |= (1<<(MA_EN + motor + 2)); // Paralleler Motor 2,3 OFF
-                  digitalWriteFast(MA_EN + 2, HIGH);
                }
-               else // Stepperport 2
+               else if(motor == 1)
                {
-                  // STEPPERPORT_2 |= (1<<(MA_EN + motor));     // Motor 2,3 OFF
-                  digitalWriteFast(MA_EN + motor, HIGH);
-                  // STEPPERPORT_1 |= (1<<(MA_EN + motor - 2)); // Paralleler Motor 0,1 OFF
-                  digitalWriteFast(MA_EN + motor + 4, HIGH);
+                  digitalWriteFast(MB_EN, HIGH);
                }
-               */
 
-               deltafastdirectionA = 0;
-               deltafastdirectionB = 0;
-               deltaslowdirectionA = 0;
-               deltaslowdirectionB = 0;
+               // STEPPERPORT_2 |= (1<<(MA_EN + motor + 2)); // Paralleler Motor 2,3 OFF
+               //              StepCounterA=0;
+               //              StepCounterB=0;
+               xA = 0;
+               yA = 0;
+               xB = 0;
+               yB = 0;
 
-               // Alles abstellen
-               StepCounterA = 0;
-               StepCounterB = 0;
-               StepCounterC = 0;
-               //StepCounterD = 0;
-
-               // xA = 0;
-               // yA = 0;
                bres_counterA = 0;
                bres_delayA = 0;
 
                bres_counterB = 0;
                bres_delayB = 0;
+               deltafastdirectionA = 0;
+               deltafastdelayA = 0;
+               deltafastdirectionB = 0;
+               deltafastdelayB = 0;
 
-
-
-               ladeposition = 0;
-               motorstatus = 0;
-
-               digitalWriteFast(MA_EN, HIGH);
-               digitalWriteFast(MB_EN, HIGH);
-               digitalWriteFast(MC_EN, HIGH);
-               digitalWriteFast(MD_EN, HIGH);
+               //               CounterA=0xFFFF;
+               //              CounterB=0xFFFF;
             }
-            ladeposition=0;
-            motorstatus=0;
+            else // Stepperport 2
+            {
+               // Serial.printf("Stepperport 2\n");
+               //    STEPPERPORT_2 |= (1<<(MA_EN + motor));     // Motor 2,3 OFF
+               //digitalWriteFast(MC_EN, HIGH);
+               //digitalWriteFast(MD_EN, HIGH); // Paralleler Motor 0,1 OFF
+               if(motor == 2)
+               {
+                  digitalWriteFast(MC_EN, HIGH);
+               }
+               else if(motor == 3)
+               {
+                  digitalWriteFast(MD_EN, HIGH);
+               }
+
+               StepCounterC = 0;
+               //StepCounterD = 0;
+               xC = 0;
+               yC = 0;
+               xC = 0;
+               yD = 0;
+
+               bres_counterC = 0;
+               bres_delayC = 0;
+
+               bres_counterC = 0;
+               bres_delayC = 0;
+               deltafastdirectionC = 0;
+               deltafastdelayC = 0;
+
+               //               CounterC=0xFFFF;
+               //               CounterD=0xFFFF;
+            }
+            // cncstatus &= ~(1<<GO_HOME);
             
-            sendbuffer[5] = (abschnittnummer & 0xFF00) >> 8;
-            
-            sendbuffer[6] = abschnittnummer & 0x00FF;
 
-            sendbuffer[7] = (ladeposition & 0xFF00) >> 8;
-            sendbuffer[8] = ladeposition & 0x00FF;
-
-            //
-            sendbuffer[22] = cncstatus;
-            uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
-
-            richtung &= ~(1 << (RICHTUNG_A + motor)); // Richtung umschalten
-
-            u8g2.setCursor(0,anschlagstruct.y);
-            u8g2.print("Anschlag");
-            u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
-            u8g2.print(motor);
-            u8g2.print(" ");
-            u8g2.print(endPin);
-            u8g2.sendBuffer();
-
-
-            interrupts();
-         } // NOT END_A0 +motor
-         else
+         }    // end GO_HOME
+         else // beide Seiten abstellen
          {
+            cncstatus = 0;
+            sendbuffer[0] = 0xA5 + motor;
 
+       
+
+            deltafastdirectionA = 0;
+            deltafastdirectionB = 0;
+            deltaslowdirectionA = 0;
+            deltaslowdirectionB = 0;
+
+            // Alles abstellen
+            StepCounterA = 0;
+            StepCounterB = 0;
+            StepCounterC = 0;
+            //StepCounterD = 0;
+
+            // xA = 0;
+            // yA = 0;
+            bres_counterA = 0;
+            bres_delayA = 0;
+
+            bres_counterB = 0;
+            bres_delayB = 0;
+
+
+
+            ladeposition = 0;
+            motorstatus = 0;
+
+            digitalWriteFast(MA_EN, HIGH);
+            digitalWriteFast(MB_EN, HIGH);
+            digitalWriteFast(MC_EN, HIGH);
+            digitalWriteFast(MD_EN, HIGH);
          }
-            u8g2.setCursor(0,anschlagstruct.y+20);
-            u8g2.print("*Anschlag*");
-            u8g2.sendBuffer();
-        
-      } // richtung auf anschlag zu
-      
+         ladeposition=0;
+         motorstatus=0;
+         
+         sendbuffer[5] = (abschnittnummer & 0xFF00) >> 8;
+         
+         sendbuffer[6] = abschnittnummer & 0x00FF;
+
+         sendbuffer[7] = (ladeposition & 0xFF00) >> 8;
+         sendbuffer[8] = ladeposition & 0x00FF;
+
+         //
+         sendbuffer[22] = cncstatus;
+         uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
+
+         richtung &= ~(1 << (RICHTUNG_A + motor)); // Richtung umschalten
+
+         u8g2.setCursor(0,anschlagstruct.y);
+         u8g2.print("Anschlag");
+         //u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
+         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'A'+motor);
+         u8g2.print(" ");
+         u8g2.print(endPin);
+         u8g2.sendBuffer();
+
+
+         interrupts();
+      } // NOT END_A0 +motor
       else
       {
-      
-         if ((anschlagstatus & (1 << (END_A0 + motor))))
-         {
-               anschlagstatus &= ~(1 << (END_A0 + motor)); // Bit fuer Anschlag B0 zuruecksetzen
-         }
+
       }
+         //u8g2.setCursor(0,anschlagstruct.y+20);
+         //u8g2.print("*Anschlag*");
+         //u8g2.sendBuffer();
       
+   } // richtung auf anschlag zu
+   
+   else
+   {
+   
+      if ((anschlagstatus & (1 << (END_A0 + motor))))
+      {
+            anschlagstatus &= ~(1 << (END_A0 + motor)); // Bit fuer Anschlag B0 zuruecksetzen
+      }
    }
+   
+
 }
 
 void setPixel(int px, int py)
@@ -1914,9 +1893,9 @@ void tastenfunktion(uint16_t Tastenwert)
                }
                   break;
                   
-               case 8:     // up                             //  
+               case 8:     // up      weg vom Motor                       //  
                {
-                  if (digitalRead(END_B1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
+                  if (digitalRead(END_B1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B1
                   {
                      if (pfeiltastecode == 0)
                      {
@@ -1928,19 +1907,21 @@ void tastenfunktion(uint16_t Tastenwert)
 
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,HIGH);
-   // ***                     richtung |= (1<<RICHTUNG_C);
+                        richtung |= (1<<RICHTUNG_D);
                      }
                      if (digitalRead(END_B0_PIN)==0)
                      {
-                        oled_delete(anschlagstruct.x,anschlagstruct.y,30);
+                        //oled_frame(anschlagstruct.x,anschlagstruct.y,40);                   
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,40);
+                        oled_delete(0,anschlagstruct.y+20,90);
                      }                       
 
                   }
                }break;
 
-               case 2:    // down                                //Menu rueckwaertsschalten
+               case 2:    // down  Richtung Motor                              //
                {
-                  if (digitalRead(END_B0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
+                  if (digitalRead(END_B0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B0
                   {
                      if (pfeiltastecode == 0)
                      {
@@ -1950,15 +1931,20 @@ void tastenfunktion(uint16_t Tastenwert)
                         pfeilrampcounter = 0;
                         tastaturstep = MB_STEP;
 
-                        digitalWriteFast(MB_RI,LOW);
                         digitalWriteFast(MB_EN,LOW);
-             // **           richtung |= (1<<RICHTUNG_D);
 
-                        if (digitalRead(END_B1_PIN)==0)
-                        {
-                           oled_delete(anschlagstruct.x,anschlagstruct.y,40);
-                        }                       
+                        digitalWriteFast(MB_RI,LOW);
+                        
+                        richtung |= (1<<RICHTUNG_B);
                      }
+                     if (digitalRead(END_B1_PIN)==0)
+                     {
+                        //oled_frame(anschlagstruct.x,anschlagstruct.y,40);
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,40);
+                        //oled_frame(0,anschlagstruct.y+20,90);
+                        oled_delete(0,anschlagstruct.y+20,90);
+                     }                       
+                     
                   }
                   
                     
@@ -2009,7 +1995,7 @@ void tastenfunktion(uint16_t Tastenwert)
                      }
                      if (digitalRead(END_A0_PIN)==0)
                      {
-                     // u8g2.drawFrame(70,60,30,15);
+                        // u8g2.drawFrame(70,60,30,15);
                         oled_delete(anschlagstruct.x,anschlagstruct.y,40);   
                         oled_delete(0,anschlagstruct.y+20,90);
                      }
@@ -2455,6 +2441,21 @@ void oled_delete(uint8_t x,uint8_t y,uint8_t l)
    u8g2.setDrawColor(0);
    u8g2.drawBox(x,y-charh,l,charh+4);
    u8g2.setDrawColor(1);
+   u8g2.sendBuffer();
+}
+ void oled_fill(uint8_t x,uint8_t y,uint8_t l)
+{
+   //u8g2.setDrawColor(0);
+   u8g2.drawBox(x,y-charh,l,charh+4);
+   //u8g2.setDrawColor(1);
+   u8g2.sendBuffer();
+}
+
+void oled_frame(uint8_t x,uint8_t y,uint8_t l)
+{
+   //u8g2.setDrawColor(0);
+   u8g2.drawFrame(x,y-charh,l,charh+4);
+   //u8g2.setDrawColor(1);
    u8g2.sendBuffer();
 }
 
@@ -4112,7 +4113,7 @@ void loop()
    // Anschlagsituation abfragen
    ////#pragma mark Anschlag   Motor A
    // ********************
-   // * Anschlag Motor A *
+   // * Anschlag  A *
    // ********************
 
    if (anschlagstatus)
@@ -4126,7 +4127,7 @@ void loop()
       if ((anschlagstatus & (1 << END_A0)))// Schlitten war, aber ist nicht mehr am Anschlag
       {
          u8g2.setCursor(100,20);
-         u8g2.print("AAA");
+         u8g2.print("E A0");
          u8g2.sendBuffer();
          //digitalWriteFast(LOOPLED,LOW);
          anschlagstatus &= ~(1 << END_A0); // Bit fuer Anschlag A0 zuruecksetzen
@@ -4150,14 +4151,9 @@ void loop()
       AnschlagVonMotor(0); // Bewegung anhalten
 
    }
-
-   
-
-
-
    // #pragma mark Anschlag   Motor B
    //  **************************************
-   //  * Anschlag Motor B *
+   //  * Anschlag  B *
    //  **************************************
    // AnschlagVonMotor(1);
 
@@ -4166,7 +4162,7 @@ void loop()
       if (anschlagstatus & (1 << END_B0))
       {
          u8g2.setCursor(50,70);
-         u8g2.print("BBB");
+         u8g2.print("E B0");
          u8g2.sendBuffer();
          anschlagstatus &= ~(1 << END_B0); // Bit fuer Anschlag B0 zuruecksetzen
          
@@ -4189,9 +4185,9 @@ void loop()
 
    // End Anschlag B
 
-   // #pragma mark Anschlag   Motor C
+   // #pragma mark Anschlag   Motor C //
    //  ********************
-   //  * Anschlag Motor C *
+   //  * Anschlag  C *
    //  ********************
    // AnschlagVonMotor(2);
 
@@ -4214,10 +4210,10 @@ void loop()
       // Serial.printf("Motor C an C0\n");
       AnschlagVonMotor(2);
    }
-/*
+
    // #pragma mark Anschlag   Motor D
    //  ***************
-   //  * Anschlag Motor D *
+   //  * Anschlag  D *
    //  ***************
    // AnschlagVonMotor(3);
 
@@ -4232,9 +4228,15 @@ void loop()
    else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag D0
    {
       // Serial.printf("Motor D an D0\n");
+       if (richtung & (1 << (RICHTUNG_D))) // Richtung ist auf Anschlag B0 zu   (RICHTUNG_A ist 0)
+      {
+         anschlagcount++;
+         anschlagstruct.aktiv = 1;
+        
+      }
       AnschlagVonMotor(3);
    }
-*/
+
    // #pragma mark Motor A B
    // // Serial.printf("deltafastdirectionA: %d deltafastdirectionB: %d  \n",deltafastdirectionA,deltafastdirectionB);
 
