@@ -1381,9 +1381,11 @@ void AnschlagVonMotor(const uint8_t motor)
 
          u8g2.setCursor(0,anschlagstruct.y);
          u8g2.print("Anschlag");
-         //u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
-         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'A'+motor);
-         u8g2.print(" ");
+         u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
+         uint16_t motorcode = 'A'+motor;
+         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,motorcode);
+         u8g2.setCursor(anschlagstruct.x+20,anschlagstruct.y);
+         u8g2.print('P');
          u8g2.print(endPin);
          u8g2.sendBuffer();
 
@@ -1522,7 +1524,9 @@ uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
 
 uint16_t readJoystick(uint8_t stick)
 {
+   cli();
    uint16_t adctastenwert = adc->adc0->analogRead(stick);
+   sei();
    if (adctastenwert > 10)
    {
       return adctastenwert;
@@ -1912,7 +1916,7 @@ void tastenfunktion(uint16_t Tastenwert)
                      if (digitalRead(END_B0_PIN)==0)
                      {
                         //oled_frame(anschlagstruct.x,anschlagstruct.y,40);                   
-                        oled_delete(anschlagstruct.x,anschlagstruct.y,40);
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);
                         oled_delete(0,anschlagstruct.y+20,90);
                      }                       
 
@@ -1939,8 +1943,8 @@ void tastenfunktion(uint16_t Tastenwert)
                      }
                      if (digitalRead(END_B1_PIN)==0)
                      {
-                        //oled_frame(anschlagstruct.x,anschlagstruct.y,40);
-                        oled_delete(anschlagstruct.x,anschlagstruct.y,40);
+                        //oled_frame(anschlagstruct.x,anschlagstruct.y,50);
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);
                         //oled_frame(0,anschlagstruct.y+20,90);
                         oled_delete(0,anschlagstruct.y+20,90);
                      }                       
@@ -1969,7 +1973,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         }
                         if (digitalRead(END_A1_PIN)==0)
                         {
-                           oled_delete(anschlagstruct.x,anschlagstruct.y,40);
+                           oled_delete(anschlagstruct.x,anschlagstruct.y,50);
                            oled_delete(0,anschlagstruct.y+20,90);
 
                         }                    
@@ -1996,7 +2000,7 @@ void tastenfunktion(uint16_t Tastenwert)
                      if (digitalRead(END_A0_PIN)==0)
                      {
                         // u8g2.drawFrame(70,60,30,15);
-                        oled_delete(anschlagstruct.x,anschlagstruct.y,40);   
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);   
                         oled_delete(0,anschlagstruct.y+20,90);
                      }
                      
@@ -2275,13 +2279,17 @@ void tastenfunktion(uint16_t Tastenwert)
 
 uint16_t fixjoystickMitte(uint8_t stick) // Mitte lesen
 {
+   noInterrupts();
    uint16_t mittel = 0;
    for (uint8_t i = 0;i<4;i++)
    {
       mittel  += adc->adc0->analogRead(stick);
+      _delay_ms(1);
 
    }
+   interrupts();
    return (mittel/4) ; // 
+
 }
 
 void joystickfunktionA(void)
@@ -2555,18 +2563,18 @@ void setup()
    }
 
 
-   potmitteA = fixjoystickMitte(POTA_PIN);
+   potmitteA = fixjoystickMitte(15);
    potwertA = potmitteA;
    potminA = potmitteA;
    potmaxA = potmitteA;
-
-   potmitteB = potmitteA;//fixjoystickMitte(POTB_PIN);
+   _delay_ms(2);
+   potmitteB = fixjoystickMitte(22);
    potwertB = potmitteB;
    potminB = potmitteB;
    potmaxB = potmitteB;
  
    
-
+ 
 
 
   // joysticktimerA.begin(joysticktimerAFunktion,JOYSTICKSTARTIMPULS);
@@ -2638,8 +2646,8 @@ void setup()
    calibminA = potmitteA;
    calibmaxA = potmitteA;
 
-   calibminB = potmitteA;
-   calibmaxB = potmitteA;
+   calibminB = potmitteB;
+   calibmaxB = potmitteB;
 
    // SPI
    /*
@@ -2676,7 +2684,7 @@ void setup()
    out_data[0] = 0xFF;
    uint8_t eepromaddress = EEPROMCALIB;
    //SPI_out2data(103,EEPROM.read(eepromaddress+1));
-   calibmaxA = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
+   calibminA = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
    calibmaxA = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
 
    calibminB = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
@@ -2688,6 +2696,10 @@ void setup()
    u8g2.setCursor(0, 122);
    u8g2.print(F("LCD_teensy4_PIO"));
 
+   u8g2.setCursor(0, 100);
+   u8g2.print(potmitteA);
+   u8g2.setCursor(50, 100);
+   u8g2.print(potmitteB);
 
    //u8g2.setFont(u8g2_font_cu12_hr);
 
@@ -2729,7 +2741,7 @@ void setup()
     
    u8g2.sendBuffer();
    // https://www.pjrc.com/teensy/td_libs_Servo.html
-servoC.attach(6); 
+   servoC.attach(6); 
 }
 
 
@@ -2832,7 +2844,7 @@ void loop()
          //u8g2.print(anschlagstruct.data);
          //u8g2.setCursor(95,16);
          //u8g2.print(anschlagcount);
-         u8g2.sendBuffer();  
+         //u8g2.sendBuffer();  
       }
       
      
@@ -2885,7 +2897,7 @@ void loop()
                   joystickbuffer[53] = calibmaxA & 0x00FF;
                   u8g2.setCursor(10,CALIB_Y+charh);
                   u8g2.print(calibmaxA);
-                  _delay_ms(1);
+                  //_delay_ms(1);
                   //u8g2.sendBuffer();
                }
 
@@ -3037,7 +3049,7 @@ void loop()
 
    } // sincelastjoystickdata > 500
 
-   if (sincelaststep > 500) // micros
+   if (sincelaststep > 1000) // micros
    {
       sincelaststep = 0;
      
@@ -4789,7 +4801,7 @@ void loop()
    // if (sendstatus >= 3)
    sendstatus = 0;
 
-   interrupts();
+   //interrupts();
    // End Motor D
 
    /**   End CNC-routinen   ***********************/
