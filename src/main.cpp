@@ -2695,12 +2695,12 @@ void setup()
    u8g2.setFont(u8g2_font_helvR08_tr);
    u8g2.setCursor(0, 122);
    u8g2.print(F("LCD_teensy4_PIO"));
-
+/*
    u8g2.setCursor(0, 100);
    u8g2.print(potmitteA);
    u8g2.setCursor(50, 100);
    u8g2.print(potmitteB);
-
+*/
    //u8g2.setFont(u8g2_font_cu12_hr);
 
 
