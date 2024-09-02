@@ -2299,8 +2299,9 @@ uint16_t fixjoystickMitte(uint8_t stick) // Mitte lesen
       _delay_ms(1);
 
    }
+   mittel /= 4;
    interrupts();
-   return (mittel/4) ; // 
+   return (mittel) ; // 
 
 }
 
