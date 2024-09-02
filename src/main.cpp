@@ -86,7 +86,6 @@ struct oled_struct indexstruct;
 
 //
 
-//#include <MUIU8g2.h>
 
 #include "main.h"
 //#include "display.h"
@@ -98,7 +97,6 @@ struct oled_struct indexstruct;
 #include <ADC.h>
 // https://registry.platformio.org/libraries/adafruit/Adafruit%20SSD1327/examples/ssd1327_test/ssd1327_test.ino
 
-//#include <MUIU8g2.h>
 
 
 // Joystick
@@ -186,7 +184,6 @@ uint8_t paketnummer = 0;
 uint16_t spicounter=0;
 
 
-//ADC *adc = new ADC(); // adc object
 
 
 
@@ -552,15 +549,12 @@ uint16_t loopcounter1 = 0;
 uint8_t h = 60;
 uint8_t wertcounter = 0;
 uint8_t wert = 0;
-/*
-uint8_t manright [64] = {128, 37, 0, 0, 20, 0, 0, 0, 128, 37, 0, 0, 20, 0, 0, 0, 194, 3, 0, 0, 0, 1, 1, 48, 240, 48, 1, 0, 0, 0, 0, 17, 3, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 
-
-uint8_t manup [64] = {0, 0, 128, 37, 0, 0, 20, 0, 0, 0, 128, 37, 0, 0, 20, 0, 194, 3, 0, 0, 0, 2, 1, 48, 240, 48, 1, 0, 0, 0, 0, 17, 3, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-uint8_t manleft [64] = {128, 165, 0, 0, 20, 0, 0, 0, 128, 165, 0, 0, 20, 0, 0, 0, 194, 3, 0, 0, 0, 1, 1, 48, 240, 48, 1, 0, 0, 0, 0, 17, 3, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-uint8_t mandown [64] = {0, 0, 128, 165, 0, 0, 20, 0, 0, 0, 128, 165, 0, 0, 20, 0, 194, 3, 0, 0, 0, 2, 1, 48, 240, 48, 1, 0, 0, 0, 0, 17, 3, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-*/
+// Servo
+volatile uint16_t servopos = 200; 
+volatile uint16_t servotakt = 0; 
+volatile uint8_t servostatus = 0;
 // Functions
 
 
@@ -954,7 +948,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    CounterB = DelayB;
 
    // Motor C
-   digitalWriteFast(MC_EN, LOW); // Pololu ON
+   //digitalWriteFast(MC_EN, LOW); // Pololu ON
    // CounterC=0;
    dataL = 0;
    dataH = 0;
@@ -1887,15 +1881,7 @@ void tastenfunktion(uint16_t Tastenwert)
                   break;
                   
                   
-               case 1: 
-               {
-                  // Serial.printf("Taste 1\n");
-                  //motor_C.setTargetAbs(800);
-                  digitalWriteFast(MC_EN,LOW);
-                  //controller.move(motor_C);
-                  
-               }
-                  break;
+               
                   
                case 8:     // up      weg vom Motor                       //  
                {
@@ -2009,16 +1995,42 @@ void tastenfunktion(uint16_t Tastenwert)
 
                } break; // case 6
 
-              case 3:   //
+              case 9:   // Servo down
                {
+                  if(servopos > 100)
+                  {
+                     servostatus |= (1<<SERVO_DOWN);
+                     //servopos = 100;
+                     //servoC.write(servopos);
+                     digitalWriteFast(MC_EN,LOW);
+                  }
                   //uint8_t lage = AbschnittLaden_TS(drillup);
+                  /*
                   if (pfeiltastecode == 0)
                   {
-                     pfeiltastecode = 22;
+                     pfeiltastecode = SERVO_CODE;
                      pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
                      endimpulsdauer = TASTENENDIMPULSDAUER;
                   }
+                  */
                }break;
+
+               case 3: 
+               {
+                   if(servopos< 200) // Servo up
+                  {
+                     servostatus |= SERVO_UP;
+                     servopos = 200;
+                     servoC.write(servopos);
+                     digitalWriteFast(MC_EN,LOW);
+                  }
+                  // Serial.printf("Taste 1\n");
+                  //motor_C.setTargetAbs(800);
+                  //digitalWriteFast(MC_EN,LOW);
+                  //controller.move(motor_C);
+                  
+               }
+                  break;
 
                case 5:                        // Ebene tiefer
                {
@@ -2082,7 +2094,7 @@ void tastenfunktion(uint16_t Tastenwert)
                   
  
                   
-               case 9:
+               case 1:
                {
                   //Kalibrierung ON/OFF
                   if(analogtastaturstatus & (1<<JOYSTIICK_ON))
@@ -2692,10 +2704,11 @@ void setup()
    u8g2.clearBuffer();  
    u8g2.setFontMode(1);
    // 
+   /*
    u8g2.setFont(u8g2_font_helvR08_tr);
    u8g2.setCursor(0, 122);
    u8g2.print(F("LCD_teensy4_PIO"));
-/*
+
    u8g2.setCursor(0, 100);
    u8g2.print(potmitteA);
    u8g2.setCursor(50, 100);
@@ -2711,10 +2724,7 @@ void setup()
 
 
 
-   //u8g2.setCursor(0, 40);
-   //u8g2.print(F("teensy4_PIO"));
-
-   //u8g2.drawFrame(110,50,12,h);
+   
    u8g2.setFontMode(0);
    u8g2.setBitmapMode(1);
    //u8g2.setFont(u8g2_font_t0_14_tr);
@@ -2741,7 +2751,10 @@ void setup()
     
    u8g2.sendBuffer();
    // https://www.pjrc.com/teensy/td_libs_Servo.html
-   servoC.attach(6); 
+   servoC.attach(SERVO_PIN); 
+   servostatus |= SERVO_UP;
+   servoC.write(servopos);
+   digitalWriteFast(MC_EN,LOW);
 }
 
 
@@ -2762,7 +2775,7 @@ void loop()
 
 
 
-   if (sinceblink > 1000)
+   if (sinceblink > 0x400)
    {
       sinceblink = 0;
       //lcd.setCursor(0, 1);
@@ -2792,14 +2805,16 @@ void loop()
       
       //digitalWriteFast(LOOPLED,!(digitalRead(LOOPLED)));
       // blink mit MC_EN
-      digitalWriteFast(MC_EN, !(digitalRead(MC_EN)));
+      //digitalWriteFast(MC_EN, !(digitalRead(MC_EN)));
 
       parallelcounter += 2;
     
    } // sinceblink 1000
 
-   if (sincelastjoystickdata > 200) // millis
+   if (sincelastjoystickdata > 0xFF) // millis
    {
+     
+
       // OLED
       //u8g2.setFontMode(0);
       //u8g2.setCursor(100,60);
@@ -3049,14 +3064,29 @@ void loop()
 
    } // sincelastjoystickdata > 500
 
-   if (sincelaststep > 1000) // micros
+   if (sincelaststep > 0x7FF) // micros
    {
       sincelaststep = 0;
      
       //ADC_Wert0 = 1;//analogRead(A1); // CNC: A0 besetzt
       //ADC_Wert1 = 2;//analogRead(A1)/2;
       
-      
+      if((servostatus & (1<<SERVO_DOWN)) && ((servotakt % SERVO_DIV) == 0))
+      {
+         
+         if(servopos > SERVO_MIN)
+         {
+                  servopos -= SERVO_SCHRITT;
+                  servoC.write(servopos);
+         }
+         else
+         {
+                  servostatus &=  ~(1<<SERVO_DOWN);
+         }
+      }
+      servotakt++;
+
+
       if(analogtastaturstatus & (1<<JOYSTIICK_ON))  // joystick ON
       {
          if(adcindex%2 == 0) // even
@@ -3342,7 +3372,7 @@ void loop()
             {
                // noInterrupts();
                PWM = buffer[29];
-               //              lcd.print(String(PWM));
+               // lcd.print(String(PWM));
 
                ladeposition = 0;
                // globalaktuelleladeposition = 0;
@@ -3599,7 +3629,7 @@ void loop()
 
             digitalWriteFast(MA_EN, HIGH);
             digitalWriteFast(MB_EN, HIGH);
-            digitalWriteFast(MC_EN, HIGH);
+            //digitalWriteFast(MC_EN, HIGH);
             //digitalWriteFast(MD_EN, HIGH);
    
             xA = 0;
@@ -3954,7 +3984,7 @@ void loop()
                motorstatus = 0;
                ringbufferstatus = 0x00;
                anschlagstatus = 0;
-               u8g2.setCursor(10,70);
+               u8g2.setCursor(10,80);
                u8g2.print("AAA");
                u8g2.sendBuffer();
                ringbufferstatus |= (1 << FIRSTBIT);
@@ -4778,7 +4808,7 @@ void loop()
             {
                // Motoren ausschalten
                // // Serial.printf("Motor C ausschalten\n");
-               digitalWriteFast(MC_EN, HIGH);
+               //digitalWriteFast(MC_EN, HIGH);
             }
          }
          /*
