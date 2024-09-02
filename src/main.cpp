@@ -542,6 +542,10 @@ volatile uint16_t           rampimpulsdauer = TASTENSTARTIMPULSDAUER;
 #define MAPDIFFB_H             14
 #define MAPDIFFB_L             15
 
+// Servo
+volatile uint16_t servopos = 200; 
+volatile uint16_t servotakt = 0; 
+volatile uint8_t servostatus = 0;
 
  
 
@@ -2284,11 +2288,12 @@ uint16_t fixjoystickMitte(uint8_t stick) // Mitte lesen
    for (uint8_t i = 0;i<4;i++)
    {
       mittel  += adc->adc0->analogRead(stick);
-      _delay_ms(1);
+      _delay_ms(2);
 
    }
+   mittel /= 4;
    interrupts();
-   return (mittel/4) ; // 
+   return (mittel) ; // 
 
 }
 
@@ -2798,7 +2803,7 @@ void loop()
     
    } // sinceblink 1000
 
-   if (sincelastjoystickdata > 200) // millis
+   if (sincelastjoystickdata > 0xFF) // millis
    {
       // OLED
       //u8g2.setFontMode(0);
@@ -3049,7 +3054,7 @@ void loop()
 
    } // sincelastjoystickdata > 500
 
-   if (sincelaststep > 1000) // micros
+   if (sincelaststep > 0x400) // micros
    {
       sincelaststep = 0;
      

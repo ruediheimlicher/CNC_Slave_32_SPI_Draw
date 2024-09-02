@@ -253,6 +253,16 @@
 #define  STEPS_BYTE_L  27
 */
 
+#define SERVO_PIN           6
+
+#define SERVO_CODE    6
+#define SERVO_UP      0
+#define SERVO_DOWN    1
+#define SERVO_SCHRITT 1
+#define SERVO_DIV     0x0C
+
+#define SERVO_MIN   100
+#define SERVO_MAX   200
 
 
 #endif /* settings_h */
