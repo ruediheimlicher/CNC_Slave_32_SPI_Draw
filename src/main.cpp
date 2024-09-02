@@ -1290,6 +1290,7 @@ void AnschlagVonMotor(const uint8_t motor)
                //    STEPPERPORT_2 |= (1<<(MA_EN + motor));     // Motor 2,3 OFF
                //digitalWriteFast(MC_EN, HIGH);
                //digitalWriteFast(MD_EN, HIGH); // Paralleler Motor 0,1 OFF
+               /*
                if(motor == 2)
                {
                   digitalWriteFast(MC_EN, HIGH);
@@ -1316,6 +1317,7 @@ void AnschlagVonMotor(const uint8_t motor)
 
                //               CounterC=0xFFFF;
                //               CounterD=0xFFFF;
+               */
             }
             // cncstatus &= ~(1<<GO_HOME);
             
@@ -1354,8 +1356,8 @@ void AnschlagVonMotor(const uint8_t motor)
 
             digitalWriteFast(MA_EN, HIGH);
             digitalWriteFast(MB_EN, HIGH);
-            digitalWriteFast(MC_EN, HIGH);
-            digitalWriteFast(MD_EN, HIGH);
+            //digitalWriteFast(MC_EN, HIGH);
+            //digitalWriteFast(MD_EN, HIGH);
          }
          ladeposition=0;
          motorstatus=0;
@@ -2273,7 +2275,7 @@ void tastenfunktion(uint16_t Tastenwert)
           //  digitalWriteFast(MC_EN,HIGH);
             digitalWriteFast(MA_STEP,HIGH);
             digitalWriteFast(MB_STEP,HIGH);
-            digitalWriteFast(MC_STEP,HIGH);
+            //digitalWriteFast(MC_STEP,HIGH);
 
     
          analogtastaturstatus &= ~(1<<TASTE_ON);
