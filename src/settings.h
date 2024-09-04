@@ -132,7 +132,7 @@
 
 #define THREAD_COUNT_BIT   0
 
-#define TIMERINTERVALL 128
+#define TIMERINTERVALL 196
 
 // Ramp
 #define RAMP_OK      1 // Ramp einschalten

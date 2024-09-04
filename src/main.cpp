@@ -1947,24 +1947,32 @@ void tastenfunktion(uint16_t Tastenwert)
                {
                   if (digitalRead(END_A0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
                   {     
-                        if (pfeiltastecode == 0)
-                        {
-                           pfeiltastecode = LEFT;
-                           pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
-                           pfeilrampcounter = 0;
-                           endimpulsdauer = TASTENENDIMPULSDAUER;
-                           tastaturstep = MA_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
+                     joystickbuffer[0] = 0x80 + LEFT;
+                     //joystickbuffer[2] = richtung;
+                     if (digitalRead(END_A1_PIN)==0)
+                     {
+                        joystickbuffer[3] = RIGHT; // del rechts
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);
+                        oled_delete(0,anschlagstruct.y+20,90);
 
-                           digitalWriteFast(MA_EN,LOW);
-                           digitalWriteFast(MA_RI,LOW);
-                           richtung |= (1<<RICHTUNG_A);
-                        }
-                        if (digitalRead(END_A1_PIN)==0)
-                        {
-                           oled_delete(anschlagstruct.x,anschlagstruct.y,50);
-                           oled_delete(0,anschlagstruct.y+20,90);
+                     }
+                     if (pfeiltastecode == 0)
+                     {
+                        pfeiltastecode = 0x80 + LEFT;
+                        pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
+                        pfeilrampcounter = 0;
+                        endimpulsdauer = TASTENENDIMPULSDAUER;
+                        tastaturstep = MA_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
 
-                        }                    
+                        digitalWriteFast(MA_EN,LOW);
+                        digitalWriteFast(MA_RI,LOW);
+                        richtung |= (1<<RICHTUNG_A);
+                        joystickbuffer[3] = 0; // del
+
+                     }
+                      joystickbuffer[2] = richtung;
+                     uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
+                   
                   }
                } break; // case 4
                   
@@ -1973,6 +1981,17 @@ void tastenfunktion(uint16_t Tastenwert)
                {
                   if (digitalRead(END_A1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
                   {
+                     joystickbuffer[0] = 0x80 + RIGHT;
+                     
+                     if (digitalRead(END_A0_PIN)==0)
+                     {
+                       
+                        // u8g2.drawFrame(70,60,30,15);
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);   
+                        oled_delete(0,anschlagstruct.y+20,90);
+                        joystickbuffer[3] = LEFT; // del rechts
+
+                     }
                      if (pfeiltastecode == 0)
                      { 
                         pfeiltastecode = RIGHT;
@@ -1985,13 +2004,9 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MA_EN,LOW);
                         richtung |= (1<<RICHTUNG_C);
                      }
-                     if (digitalRead(END_A0_PIN)==0)
-                     {
-                        // u8g2.drawFrame(70,60,30,15);
-                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);   
-                        oled_delete(0,anschlagstruct.y+20,90);
-                     }
-                     
+                     joystickbuffer[2] = richtung;
+                     uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
+
 
                   }
 
@@ -2368,7 +2383,7 @@ void stopCNC(void)
    
    digitalWriteFast(MA_STEP, HIGH);
    digitalWriteFast(MB_STEP, HIGH);
-   digitalWriteFast(MC_STEP, HIGH);
+   //digitalWriteFast(MC_STEP, HIGH);
    //digitalWriteFast(MD_STEP, HIGH);
 
    for (k=0;k<RINGBUFFERTIEFE;k++)
@@ -3077,7 +3092,7 @@ void loop()
       if((servostatus & (1<<SERVO_DOWN)) && ((servotakt % SERVO_DIV) == 0))
       {
          
-         if(servopos > SERVO_MIN)
+         if(servopos > (SERVO_MIN + SERVO_SCHRITT))
          {
                   servopos -= SERVO_SCHRITT;
                   servoC.write(servopos);
@@ -3085,6 +3100,9 @@ void loop()
          else
          {
                   servostatus &=  ~(1<<SERVO_DOWN);
+                  servopos = SERVO_MIN;
+                  //digitalWriteFast(MC_EN, HIGH);
+
          }
       }
       servotakt++;
@@ -3833,7 +3851,7 @@ void loop()
             
             digitalWriteFast(MA_STEP, HIGH);
             digitalWriteFast(MB_STEP, HIGH);
-            digitalWriteFast(MC_STEP, HIGH);
+            //digitalWriteFast(MC_STEP, HIGH);
             //digitalWriteFast(MD_STEP, HIGH);
 
 
@@ -4622,7 +4640,7 @@ void loop()
             {
                if (ddxB && (xB >=0)) // Motor C soll steppen
                {
-                  digitalWriteFast(MC_STEP, LOW);
+                  //digitalWriteFast(MC_STEP, LOW);
                   stepdurC = STEPDUR;
                }
             }
@@ -4649,7 +4667,7 @@ void loop()
             {
                if (pdxB && (xB >=0)) // Motor C soll steppen
                {
-                  digitalWriteFast(MC_STEP, LOW);
+                  //digitalWriteFast(MC_STEP, LOW);
                   stepdurC = STEPDUR;
                }
             }
@@ -4789,7 +4807,7 @@ void loop()
             }
             if (stepdurC == 0)
             {
-               digitalWriteFast(MC_STEP, HIGH);
+               //digitalWriteFast(MC_STEP, HIGH);
             }
          }
          /*
