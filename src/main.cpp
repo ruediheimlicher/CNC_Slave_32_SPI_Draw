@@ -1855,6 +1855,7 @@ void tastenfunktion(uint16_t Tastenwert)
             }
             tastestruct.aktiv = 1;
             tastestruct.data = Taste;
+
             //u8g2.setCursor(90,60);
             //u8g2.print("     ");
             //u8g2.setCursor(90,60);
@@ -1864,12 +1865,13 @@ void tastenfunktion(uint16_t Tastenwert)
             // Serial.printf("Tastenwert: %d Taste: %d \n",Taste,Tastenwert);
             tastaturcounter=0;
             Tastenwert=0x00;
+            pfeiltastecode = 0;
             uint8_t spidata = Taste;
 
             uint8_t spijoystickdata = Taste;
             
             
-            
+            //joystickbuffer[3] = 13;
             
             switch (Taste)
             {
@@ -1883,7 +1885,6 @@ void tastenfunktion(uint16_t Tastenwert)
                   break;
                   
                   
-               
                   
                case 8:     // up      weg vom Motor                       //  
                {
@@ -1949,16 +1950,17 @@ void tastenfunktion(uint16_t Tastenwert)
                   {     
                      joystickbuffer[0] = 0x80 + LEFT;
                      //joystickbuffer[2] = richtung;
-                     if (digitalRead(END_A1_PIN)==0)
+                     if (digitalRead(END_A1_PIN)==0) // nicht am Anschlag rechts
                      {
-                        joystickbuffer[3] = RIGHT; // del rechts
+                        joystickbuffer[3] = RIGHT; // del Anschlagind rechts
                         oled_delete(anschlagstruct.x,anschlagstruct.y,50);
                         oled_delete(0,anschlagstruct.y+20,90);
 
                      }
+                     //joystickbuffer[3] = RIGHT; // del Anschlagind rechts
                      if (pfeiltastecode == 0)
                      {
-                        pfeiltastecode = 0x80 + LEFT;
+                        pfeiltastecode = LEFT;
                         pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
                         pfeilrampcounter = 0;
                         endimpulsdauer = TASTENENDIMPULSDAUER;
@@ -1966,13 +1968,14 @@ void tastenfunktion(uint16_t Tastenwert)
 
                         digitalWriteFast(MA_EN,LOW);
                         digitalWriteFast(MA_RI,LOW);
-                        richtung |= (1<<RICHTUNG_A);
-                        joystickbuffer[3] = 0; // del
+                        richtung = (1<<RICHTUNG_A); // 0x01
+                        //joystickbuffer[3] = 0; // kein del
 
-                     }
+                     
                       joystickbuffer[2] = richtung;
+                     joystickbuffer[4] = 77;//rand() % 20 + 1;
                      uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
-                   
+                     }
                   }
                } break; // case 4
                   
@@ -1983,15 +1986,16 @@ void tastenfunktion(uint16_t Tastenwert)
                   {
                      joystickbuffer[0] = 0x80 + RIGHT;
                      
-                     if (digitalRead(END_A0_PIN)==0)
+                     if (digitalRead(END_A0_PIN)==0) // nicht am Anschlag links
                      {
-                       
+                       joystickbuffer[3] = LEFT; // del Anschlagind rechts
                         // u8g2.drawFrame(70,60,30,15);
                         oled_delete(anschlagstruct.x,anschlagstruct.y,50);   
                         oled_delete(0,anschlagstruct.y+20,90);
-                        joystickbuffer[3] = LEFT; // del rechts
-
+                        
                      }
+
+                     //joystickbuffer[3] = LEFT; // del Anschlagind rechts
                      if (pfeiltastecode == 0)
                      { 
                         pfeiltastecode = RIGHT;
@@ -2002,12 +2006,14 @@ void tastenfunktion(uint16_t Tastenwert)
 
                         digitalWriteFast(MA_RI,HIGH);
                         digitalWriteFast(MA_EN,LOW);
-                        richtung |= (1<<RICHTUNG_C);
-                     }
+                        richtung = (1<<RICHTUNG_C); // 0x04
+                        // joystickbuffer[3] = LEFT; // del Anschlagind links
+                     
                      joystickbuffer[2] = richtung;
+                     joystickbuffer[4] = 88;//rand() % 20;;
+
                      uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
-
-
+                     }
                   }
 
                } break; // case 6
