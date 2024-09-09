@@ -937,7 +937,6 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    dataH &= (0x7F);
 
    StepCounterB = dataL | (dataH << 8);
-   // int16_t newday = StepCounterB * vz;
 
    StepCounterB *= micro;
    out_data[STEPCOUNTERB_H] = (StepCounterB & 0xFF00)>>8;
@@ -947,7 +946,9 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
    CounterB = DelayB;
 
+
    // Motor C
+
    //digitalWriteFast(MC_EN, LOW); // Pololu ON
    // CounterC=0;
    dataL = 0;
@@ -968,7 +969,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
    else
    {
-    // ***  richtung &= ~(1 << RICHTUNG_C);
+    // ***  richtung &= ~(1 << RICHTUNG_C); //
       digitalWriteFast(MA_RI, HIGH);
       // // Serial.printf("AbschnittLaden_bres C positiv\n");
    }
@@ -1667,20 +1668,20 @@ void joysticktimerBFunktion(void)
      //ungerade, impulsabstand einstellen, PINs deaktivieren
      
       if (digitalRead(END_B0_PIN)) //|| (digitalRead(MB_RI) == HIGH))// kein Anschlag
-         {
-            if ((digitalRead(END_B1_PIN) ) || (digitalRead(MB_RI) == LOW))// Kein Anschlag an A1 oder Richtung von A1 weg
-            {
-               joysticktimerB.update(JOYSTICKIMPULS);
-               digitalWriteFast(MB_STEP,HIGH); // Impuls starten
-            }
-         }
-         else  if (digitalRead(MB_RI) == HIGH) // Anschlag an B0 und Richtung von B0 weg
+      {
+         if ((digitalRead(END_B1_PIN) ) || (digitalRead(MB_RI) == LOW))// Kein Anschlag an A1 oder Richtung von A1 weg
          {
             joysticktimerB.update(JOYSTICKIMPULS);
-            digitalWriteFast(MB_STEP,HIGH);
+            digitalWriteFast(MB_STEP,HIGH); // Impuls starten
          }
-   
-   
+      }
+      else  if (digitalRead(MB_RI) == HIGH) // Anschlag an B0 und Richtung von B0 weg
+      {
+         joysticktimerB.update(JOYSTICKIMPULS);
+         digitalWriteFast(MB_STEP,HIGH);
+      }
+
+
    
    
    }
@@ -1960,7 +1961,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         tastaturstep = MB_STEP;
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,LOW);
-                        richtung = (1<<RICHTUNG_B);
+                        richtung = (1<<RICHTUNG_B); // 0x01
                         joystickbuffer[2] = richtung;
                         joystickbuffer[4] = 55;//rand() % 20 + 1;
                         uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
@@ -1972,12 +1973,11 @@ void tastenfunktion(uint16_t Tastenwert)
                }break;
                   
                    
-               case 4:   // left
+               case 4:   // left // Auf Motor A zu
                {
                   if (digitalRead(END_A0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
                   {     
                      joystickbuffer[0] = 0x80 + LEFT;
-                     //joystickbuffer[2] = richtung;
                      if (digitalRead(END_A1_PIN)==0) // nicht am Anschlag rechts
                      {
                         joystickbuffer[3] = RIGHT; // del Anschlagind rechts
@@ -2006,7 +2006,7 @@ void tastenfunktion(uint16_t Tastenwert)
                } break; // case 4
                   
                       
-               case 6: // right
+               case 6: // right von Motor A weg
                {
                   if (digitalRead(END_A1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
                   {
@@ -3507,13 +3507,7 @@ void loop()
          case 0xB5: // PCB neu
          {
             // Serial.printf("B5\n");
-            /*
-            digitalWriteFast(MA_EN,HIGH);
-            digitalWriteFast(MB_EN,HIGH);
-            
-            digitalWriteFast(MC_EN,HIGH);
-            digitalWriteFast(MD_EN,HIGH);
-            */
+           
             sendbuffer[0] = 0xB6;
             usb_rawhid_send((void *)sendbuffer, 0);
             uint8_t i = 0;
@@ -4217,8 +4211,6 @@ void loop()
    }
    if (digitalRead(END_A0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
    {
-      
-      //digitalWriteFast(LOOPLED,LOW);
       if ((anschlagstatus & (1 << END_A0)))// Schlitten war, aber ist nicht mehr am Anschlag
       {
          u8g2.setCursor(100,20);
@@ -4327,7 +4319,6 @@ void loop()
       {
          anschlagcount++;
          anschlagstruct.aktiv = 1;
-        
       }
       AnschlagVonMotor(3);
    }
@@ -4632,7 +4623,8 @@ void loop()
    //  **************************************
    //  * Motor C D *
    //  **************************************
-
+   /*
+   
    // Es hat noch Steps, CounterC ist abgezaehlt (bres_delayB bestimmt Impulsabstand fuer Steps)
    if (deltafastdirectionB > 0)
 
@@ -4678,7 +4670,7 @@ void loop()
             }
             if (yB >=0)
             {
-               /**/
+               
                if (ddyB && (yB >=0)) // Motor D soll steppen
                {
                   //digitalWriteFast(MD_STEP, LOW);
@@ -4778,14 +4770,7 @@ void loop()
                   aktuelleladeposition = (ladeposition & 0x00FF);
                   aktuelleladeposition &= 0x03;
 
-                  /*
-                  // // Serial.printf("Motor CD: aktuellelage code vor: %d\nAbschnittdaten vor Funktion: \n",CNCDaten[aktuelleladeposition][17]);
-                  for(uint8_t i=0;i<27;i++) // 5 us ohne printf, 10ms mit printf
-                  {
-                     // // Serial.printf("%d \t",CNCDaten[aktuelleladeposition][i]);
-                  }
-                  // // Serial.printf("\n");
-                  */
+                 
                   // aktuellen Abschnitt laden
                   aktuellelage = AbschnittLaden_bres(CNCDaten[aktuelleladeposition]);
 
@@ -4842,19 +4827,7 @@ void loop()
                //digitalWriteFast(MC_STEP, HIGH);
             }
          }
-         /*
-         if (digitalReadFast(MD_STEP) == 0) // 100 ns
-         {
-            if (stepdurD)
-            {
-               stepdurD--;
-            }
-            if (stepdurD == 0)
-            {
-               digitalWriteFast(MD_STEP, HIGH);
-            }
-         }
-         */
+        
          if ((xB == 0))
          {
             if (digitalReadFast(MC_EN) == 0)
@@ -4864,19 +4837,10 @@ void loop()
                //digitalWriteFast(MC_EN, HIGH);
             }
          }
-         /*
-         if ((yB == 0))
-         {
-            if (digitalReadFast(MD_EN) == 0)
-            {
-               // Motoren ausschalten
-               // // Serial.printf("Motor D ausschalten\n");
-               digitalWriteFast(MD_EN, HIGH);
-            }
-         }
-         */
-      }
-   }
+         
+      } // 
+   } 
+   */
    // // Serial.printf("G\n");
    interrupts();
 
