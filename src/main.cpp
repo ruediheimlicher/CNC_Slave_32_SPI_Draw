@@ -1155,51 +1155,52 @@ void AnschlagVonMotor(const uint8_t motor)
    // lcd_puthex(motor);
 
    uint8_t endPin = END_A0_PIN;
-   uint8_t endBit = 0;
-   switch (motor)
+   uint8_t anschlagcheck = 99;
+ //  switch (motor)
    {
-   case 0:
+ //  case 0:
    {
       if (digitalRead(END_A0_PIN) == 0)
       {
          endPin = END_A0_PIN;
-         endBit = motor;
+         anschlagcheck = motor;
       }
       if (digitalRead(END_A1_PIN) == 0)
       {
          endPin = END_A1_PIN;
-         endBit = motor;
+         anschlagcheck = motor;
       }
 
       
       
    }
-   break;
-   case 1:
+ //  break;
+ //  case 1:
    {
-        if (digitalRead(END_B0_PIN) == 0)
+      if (digitalRead(END_B0_PIN) == 0) 
       {
          endPin = END_B0_PIN;
-         endBit = motor;
+         anschlagcheck = motor;
       }
       if (digitalRead(END_B1_PIN) == 0)
       {
          endPin = END_B1_PIN;
-         endBit = motor;
+         anschlagcheck = motor;
       }
 
       
       
 
-   }break;
-
+   }
+   //break;
+/*
    case 2:
    {
       endPin = END_A1_PIN;
       endBit = motor;
    }
    break;
-   /*
+   
    case 3:
    {
        endPin = END_D0;
@@ -1228,9 +1229,12 @@ void AnschlagVonMotor(const uint8_t motor)
    //anschlagcount &= 0xFF;
    
    PWM = 0;
+   sendbuffer[0] = 0xA5 + motor;
+   sendbuffer[9] = anschlagcheck;
 
    if (richtung & (1 << (RICHTUNG_A + motor))) // Richtung ist auf Anschlag A0+motor zu   (RICHTUNG_A ist 0)
    {
+
       anschlagcount++;
       if (!(anschlagstatus & (1 << (END_A0 + motor)))) // Bit ist noch nicht gesetzt
       {
@@ -1326,7 +1330,7 @@ void AnschlagVonMotor(const uint8_t motor)
          else // beide Seiten abstellen
          {
             cncstatus = 0;
-            sendbuffer[0] = 0xA5 + motor;
+            
 
        
 
@@ -1371,27 +1375,41 @@ void AnschlagVonMotor(const uint8_t motor)
 
          //
          sendbuffer[22] = cncstatus;
+
+         sendbuffer[9] += 11;
+
          uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
-
-         richtung &= ~(1 << (RICHTUNG_A + motor)); // Richtung umschalten
-
+         sendbuffer[9] = 0;
+        
          u8g2.setCursor(0,anschlagstruct.y);
          u8g2.print("Anschlag");
          u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
          uint16_t motorcode = 'A'+motor;
          u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,motorcode);
          u8g2.setCursor(anschlagstruct.x+20,anschlagstruct.y);
+
          u8g2.print('P');
          u8g2.print(endPin);
+         u8g2.setCursor(anschlagstruct.x,anschlagstruct.y+20);
+         u8g2.print(anschlagcount);
+          u8g2.setCursor(anschlagstruct.x+20,anschlagstruct.y+20);
+          u8g2.print("*");
+         u8g2.print(richtung);
+         u8g2.print("*");
+    
          u8g2.sendBuffer();
 
+         richtung &= ~(1 << (RICHTUNG_A + motor)); // Richtung umschalten
 
          interrupts();
       } // NOT END_A0 +motor
+      //
+      /*
       else
       {
 
       }
+      */
          //u8g2.setCursor(0,anschlagstruct.y+20);
          //u8g2.print("*Anschlag*");
          //u8g2.sendBuffer();
@@ -1890,6 +1908,16 @@ void tastenfunktion(uint16_t Tastenwert)
                {
                   if (digitalRead(END_B1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B1
                   {
+                     joystickbuffer[0] = 0x80 + UP;
+                     if (digitalRead(END_B0_PIN)==0)
+                     {
+                        joystickbuffer[3] = DOWN; // del Anschlagind oben
+
+                        //oled_frame(anschlagstruct.x,anschlagstruct.y,40);                   
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);
+                        oled_delete(0,anschlagstruct.y+20,90);
+                     }                       
+
                      if (pfeiltastecode == 0)
                      {
                         //OSZIB_LO();
@@ -1900,14 +1928,12 @@ void tastenfunktion(uint16_t Tastenwert)
 
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,HIGH);
-                        richtung |= (1<<RICHTUNG_D);
+                        richtung = (1<<RICHTUNG_D);
+                        joystickbuffer[2] = richtung;
+                        joystickbuffer[4] = 44;//rand() % 20 + 1;
+                        uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
+
                      }
-                     if (digitalRead(END_B0_PIN)==0)
-                     {
-                        //oled_frame(anschlagstruct.x,anschlagstruct.y,40);                   
-                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);
-                        oled_delete(0,anschlagstruct.y+20,90);
-                     }                       
 
                   }
                }break;
@@ -1916,6 +1942,15 @@ void tastenfunktion(uint16_t Tastenwert)
                {
                   if (digitalRead(END_B0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B0
                   {
+                      joystickbuffer[0] = 0x80 + DOWN;
+                     if (digitalRead(END_B1_PIN)==0)
+                     {
+                        joystickbuffer[3] = UP; // del Anschlagind oben
+                        //oled_frame(anschlagstruct.x,anschlagstruct.y,50);
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);
+                        //oled_frame(0,anschlagstruct.y+20,90);
+                        oled_delete(0,anschlagstruct.y+20,90);
+                     }                       
                      if (pfeiltastecode == 0)
                      {
                         pfeiltastecode = DOWN;
@@ -1923,21 +1958,14 @@ void tastenfunktion(uint16_t Tastenwert)
                         endimpulsdauer = TASTENENDIMPULSDAUER;
                         pfeilrampcounter = 0;
                         tastaturstep = MB_STEP;
-
                         digitalWriteFast(MB_EN,LOW);
-
                         digitalWriteFast(MB_RI,LOW);
-                        
-                        richtung |= (1<<RICHTUNG_B);
+                        richtung = (1<<RICHTUNG_B);
+                        joystickbuffer[2] = richtung;
+                        joystickbuffer[4] = 55;//rand() % 20 + 1;
+                        uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
                      }
-                     if (digitalRead(END_B1_PIN)==0)
-                     {
-                        //oled_frame(anschlagstruct.x,anschlagstruct.y,50);
-                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);
-                        //oled_frame(0,anschlagstruct.y+20,90);
-                        oled_delete(0,anschlagstruct.y+20,90);
-                     }                       
-                     
+                                       
                   }
                   
                     
@@ -1957,7 +1985,6 @@ void tastenfunktion(uint16_t Tastenwert)
                         oled_delete(0,anschlagstruct.y+20,90);
 
                      }
-                     //joystickbuffer[3] = RIGHT; // del Anschlagind rechts
                      if (pfeiltastecode == 0)
                      {
                         pfeiltastecode = LEFT;
@@ -1969,7 +1996,6 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MA_EN,LOW);
                         digitalWriteFast(MA_RI,LOW);
                         richtung = (1<<RICHTUNG_A); // 0x01
-                        //joystickbuffer[3] = 0; // kein del
 
                      
                       joystickbuffer[2] = richtung;
@@ -4230,7 +4256,7 @@ void loop()
    {
       if (anschlagstatus & (1 << END_B0))
       {
-         u8g2.setCursor(50,70);
+         u8g2.setCursor(50,80);
          u8g2.print("E B0");
          u8g2.sendBuffer();
          anschlagstatus &= ~(1 << END_B0); // Bit fuer Anschlag B0 zuruecksetzen
@@ -4297,7 +4323,7 @@ void loop()
    else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag D0
    {
       // Serial.printf("Motor D an D0\n");
-       if (richtung & (1 << (RICHTUNG_D))) // Richtung ist auf Anschlag B0 zu   (RICHTUNG_A ist 0)
+       if (richtung & (1 << (RICHTUNG_D))) // Richtung ist auf Anschlag D0 zu   (RICHTUNG_A ist 0)
       {
          anschlagcount++;
          anschlagstruct.aktiv = 1;
