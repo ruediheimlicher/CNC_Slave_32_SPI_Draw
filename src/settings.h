@@ -197,7 +197,7 @@
 
 
 
-
+/*
 #define TASTE1  56
 #define TASTE2  78
 #define TASTE3  101
@@ -211,9 +211,52 @@
 #define TASTEL     250
 #define TASTE0     250
 #define TASTER     250
+*/
 
 
+// MILL_SLAVE_35
+/*
+#define TASTE1     67
+#define TASTE2     109
+#define TASTE3     163
+#define TASTE4     253
+#define TASTE5     360
+#define TASTE6     484
+#define TASTE7     628
+#define TASTE8     742
+#define TASTE9     827
+#define TASTEL     899
+#define TASTE0     946
+#define TASTER     993
+*/
+/*
+#define TASTE1  16
+#define TASTE2  27
+#define TASTE3  40
+#define TASTE4  63
+#define TASTE5  90
+#define TASTE6  121
+#define TASTE7  157
+#define TASTE8  185
+#define TASTE9  206
+#define TASTEL  224
+#define TASTE0  236
+#define TASTER  248
+*/
 
+
+#define TASTE1  17
+#define TASTE2  27
+#define TASTE3  41
+#define TASTE4  63
+#define TASTE5  90
+#define TASTE6  120
+#define TASTE7  155
+#define TASTE8  185
+#define TASTE9  206
+#define TASTEL  224
+#define TASTE0  236
+#define TASTER  248
 
 
 // von Mill32

@@ -882,7 +882,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    int8_t vz = 1;
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
-      richtung |= (1 << RICHTUNG_A); // Rueckwarts
+      richtung = (1 << RICHTUNG_A); // Rueckwarts
       digitalWriteFast(MA_RI, LOW);  // PIN fuer Treiber stellen
       //digitalWriteFast(MA_RI, HIGH);
       vz = -1;
@@ -890,7 +890,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
    else
    {
-      richtung |= (1 << RICHTUNG_C); //** * / Vorwarts
+      richtung = (1 << RICHTUNG_C); //** * / Vorwarts
       digitalWriteFast(MA_RI, HIGH);
    }
 
@@ -1829,7 +1829,7 @@ void haltfunktion(void)
 void tastenfunktion(uint16_t Tastenwert)
 {
    
-   if (Tastenwert>13) // ca Minimalwert der Matrix
+   if (Tastenwert>10) // ca Minimalwert der Matrix
    {
       //         wdt_reset();
       
@@ -1850,7 +1850,7 @@ void tastenfunktion(uint16_t Tastenwert)
             uint8_t t = Tastenwert & 0xFF;
             //SPI_out2data(102,t);
             //OSZIA_LO();
-
+            
             
 
             analogtastaturstatus |= (1<<TASTE_ON); // nur einmal
@@ -1869,8 +1869,15 @@ void tastenfunktion(uint16_t Tastenwert)
             }
             else
             {
-               Taste=Tastenwahl(Tastenwert);
+               Taste=Tastenwahl(t);
+
             }
+            oled_delete(0,80,40);
+            u8g2.setCursor(0,80);
+            u8g2.print(Tastenwert);
+            u8g2.print(" ");
+            u8g2.print(Taste);
+
             tastestruct.aktiv = 1;
             tastestruct.data = Taste;
 
@@ -2551,10 +2558,10 @@ void setup()
   //u8g2.setFont(u8g2_font_helvB12_tr);
 
 
-   adc->adc0->setAveraging(8); // set number of averages
+   adc->adc0->setAveraging(12); // set number of averages
    adc->adc0->setResolution(10);
-   adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
-   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::HIGH_SPEED);
+   adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED);
+   // adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::MED_SPEED);
    
    pinMode(DC_PWM, OUTPUT);
    // digitalWriteFast(DC_PWM, HIGH); // OFF
@@ -3293,7 +3300,12 @@ void loop()
             {
                //OSZIA_LO();
                // Tastatur lesen
+
                tastenwert = readTastatur() / 4; //adc->adc0->analogRead(TASTATURPIN);
+               //oled_delete(0,80,50);
+               //u8g2.setCursor(0,80);
+               //u8g2.print(tastenwert);
+               //u8g2.sendBuffer();
                //tastenwert = 99;
                tastenfunktion(tastenwert);
                //joystickWertArray[joystickindexA & 0x03] = (readJoystick(joystickPinArray[joystickindexA & 0x03]) / 4);
