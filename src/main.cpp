@@ -100,15 +100,15 @@ struct oled_struct indexstruct;
 
 
 // Joystick
-#define JOYSTICKTASTE1 25
-#define JOYSTICKTASTE2 43
-#define JOYSTICKTASTE3 69
-#define JOYSTICKTASTE4 89
-#define JOYSTICKTASTE5 112
-#define JOYSTICKTASTE6 135
-#define JOYSTICKTASTE7 157
-#define JOYSTICKTASTE8 187
-#define JOYSTICKTASTE9 211
+#define JOYSTICKTASTE1  17
+#define JOYSTICKTASTE2  27
+#define JOYSTICKTASTE3  41
+#define JOYSTICKTASTE4  63
+#define JOYSTICKTASTE5  90
+#define JOYSTICKTASTE6  120
+#define JOYSTICKTASTE7  155
+#define JOYSTICKTASTE8  185
+#define JOYSTICKTASTE9  206
 
 #define JOYSTICKTASTEL  250
 #define JOYSTICKTASTER  250
@@ -1869,7 +1869,7 @@ void tastenfunktion(uint16_t Tastenwert)
             }
             else
             {
-               Taste=Tastenwahl(t);
+               Taste=Tastenwahl(Tastenwert);
 
             }
             oled_delete(0,80,40);
@@ -2558,10 +2558,10 @@ void setup()
   //u8g2.setFont(u8g2_font_helvB12_tr);
 
 
-   adc->adc0->setAveraging(12); // set number of averages
+   adc->adc0->setAveraging(8); // set number of averages
    adc->adc0->setResolution(10);
    adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::MED_SPEED);
-   // adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::MED_SPEED);
+    adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::MED_SPEED);
    
    pinMode(DC_PWM, OUTPUT);
    // digitalWriteFast(DC_PWM, HIGH); // OFF
