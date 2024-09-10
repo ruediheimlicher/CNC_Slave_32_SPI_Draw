@@ -197,7 +197,7 @@
 
 
 
-
+/*
 #define TASTE1  56
 #define TASTE2  78
 #define TASTE3  101
@@ -211,8 +211,36 @@
 #define TASTEL     250
 #define TASTE0     250
 #define TASTER     250
+*/
 
+// Mill
+/*
+#define TASTE1  17
+#define TASTE2  27
+#define TASTE3  41
+#define TASTE4  63
+#define TASTE5  90
+#define TASTE6  120
+#define TASTE7  155
+#define TASTE8  185
+#define TASTE9  206
+#define TASTEL  224
+#define TASTE0  236
+#define TASTER  248
+*/
 
+#define KEY1  18
+#define KEY2  27
+#define KEY3  41
+#define KEY4  63
+#define KEY5  90
+#define KEY6  120
+#define KEY7  155
+#define KEY8  185
+#define KEY9  206
+#define KEYL  224
+#define KEY0  236
+#define KEYR  248
 
 
 

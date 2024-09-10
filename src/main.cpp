@@ -47,7 +47,7 @@
 #include <ADC.h>
 #include <Wire.h>
 #include <util/delay.h>
-
+#include "settings.h"
 #include <Servo.h> 
 
 Servo servoC; 
@@ -75,6 +75,9 @@ void oled_frame(uint8_t x,uint8_t y,uint8_t l);
 
 struct oled_struct anschlagstruct;
 
+
+
+
 uint8_t anschlagcount = 0;
 
 struct oled_struct indexstruct;
@@ -92,12 +95,12 @@ struct oled_struct indexstruct;
 #include "font.h"
 
  //#include "lcd.h"
-#include "settings.h"
+
 
 #include <ADC.h>
 // https://registry.platformio.org/libraries/adafruit/Adafruit%20SSD1327/examples/ssd1327_test/ssd1327_test.ino
 
-
+uint8_t Tastenwahl(uint16_t Tastaturwert);
 
 // Joystick
 #define JOYSTICKTASTE1 25
@@ -132,6 +135,7 @@ struct oled_struct indexstruct;
 #define TASTEOK            1
 #define AKTIONOK           2
 #define UPDATEOK           3
+
 
 uint16_t  cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
 uint16_t  posregister[8][8]; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
@@ -1458,17 +1462,13 @@ void plot_line(int x0, int y0, int x1, int y1)
    }
 }
 
-// gpio_MCP23S17     mcp0(10,0x20);//instance 0 (address A0,A1,A2 tied to 0)
-// LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x20
-// delay(1000);
-//  Add setup code
 
 
 ADC *adc = new ADC(); // adc object;
 
+/*
 uint8_t Tastenwahl(uint16_t Tastaturwert)
 {
-   
    if (Tastaturwert < TASTE1)
       return 1;
    if (Tastaturwert < TASTE2)
@@ -1496,7 +1496,42 @@ uint8_t Tastenwahl(uint16_t Tastaturwert)
    
    return 0;
 }
+*/
 
+uint8_t Keywahl(uint16_t Tastaturwert)
+{
+   if (Tastaturwert < KEY1)
+      return 1;
+   if (Tastaturwert < KEY2)
+      return 2;
+   if (Tastaturwert < KEY3)
+      return 3;
+   if (Tastaturwert < KEY4)
+      return 4;
+   if (Tastaturwert < KEY5)
+      return 5;
+   if (Tastaturwert < KEY6)
+      return 6;
+   if (Tastaturwert < KEY7)
+      return 7;
+   if (Tastaturwert < KEY8)
+      return 8;
+   if (Tastaturwert < KEY9)
+      return 9;
+   if (Tastaturwert < KEYL)
+      return 10;
+   if (Tastaturwert < KEY0)
+      return 0;
+   if (Tastaturwert < KEYR)
+      return 12;
+   
+   return 0;
+}
+
+uint8_t Tastenwahl2(uint16_t Tastaturwert)
+{
+   return 99;
+}
 
 uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
 {
@@ -1829,7 +1864,7 @@ void haltfunktion(void)
 void tastenfunktion(uint16_t Tastenwert)
 {
    
-   if (Tastenwert>13) // ca Minimalwert der Matrix
+   if (Tastenwert>10) // ca Minimalwert der Matrix
    {
       //         wdt_reset();
       
@@ -1869,16 +1904,21 @@ void tastenfunktion(uint16_t Tastenwert)
             }
             else
             {
-               Taste=Tastenwahl(Tastenwert);
+               //Taste = Tastenwahl(Tastenwert);
+               Taste = Keywahl(Tastenwert);
             }
             tastestruct.aktiv = 1;
             tastestruct.data = Taste;
 
-            //u8g2.setCursor(90,60);
-            //u8g2.print("     ");
-            //u8g2.setCursor(90,60);
-            //u8g2.print(Taste);
-            //u8g2.sendBuffer();
+            oled_delete(0,80,80);
+            u8g2.setCursor(0,80);
+            u8g2.print(Tastenwert);
+            u8g2.print(" ");
+            u8g2.print(KEY1);
+            u8g2.print(" ");
+            u8g2.print(Taste);
+            u8g2.print(" ");
+            
 
             // Serial.printf("Tastenwert: %d Taste: %d \n",Taste,Tastenwert);
             tastaturcounter=0;
@@ -1901,8 +1941,6 @@ void tastenfunktion(uint16_t Tastenwert)
                   
                }
                   break;
-                  
-                  
                   
                case 8:     // up      weg vom Motor                       //  
                {
@@ -2078,8 +2116,7 @@ void tastenfunktion(uint16_t Tastenwert)
                   //digitalWriteFast(MC_EN,LOW);
                   //controller.move(motor_C);
                   
-               }
-                  break;
+               }break;
 
                case 5:                        // Ebene tiefer
                {
@@ -2213,9 +2250,7 @@ void tastenfunktion(uint16_t Tastenwert)
                   joystickbuffer[3] = maxminstatus;
                   uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
 
-               }
-                  
-                  break;
+               }break;
                   /*
                case 10: // set Nullpunkt
                {
@@ -2771,9 +2806,6 @@ void setup()
    //u8g2.setFont(u8g2_font_inr16_mr);	
    u8g2.setCursor(0, 20);
    u8g2.print(F("CNC Draw"));
-
-
-
    
    u8g2.setFontMode(0);
    u8g2.setBitmapMode(1);
