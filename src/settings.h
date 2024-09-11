@@ -12,7 +12,7 @@
 #define LOOPLED 14
 #define TIMER0_STARTWERT   0x40
 
-#define JOYSTICK 1
+#define JOYSTICK 0
 
 #define EEPROMCALIB 0x10
 
@@ -177,6 +177,7 @@
 #define  INDEX_BYTE_L  19
 
 /*
+// 9er-Keyboard
 #define TASTE1     67
 #define TASTE2     109
 #define TASTE3     163
@@ -191,9 +192,56 @@
 #define TASTER     993
 */
 
+// 12er-Keyboard
+
 #define TASTEX  10
 
+// Joystick
+/*
+#define JOYSTICKTASTE1 25
+#define JOYSTICKTASTE2 43
+#define JOYSTICKTASTE3 69
+#define JOYSTICKTASTE4 89
+#define JOYSTICKTASTE5 112
+#define JOYSTICKTASTE6 135
+#define JOYSTICKTASTE7 157
+#define JOYSTICKTASTE8 187
+#define JOYSTICKTASTE9 211
+*/
+#define JOYSTICKTASTE1  17
+#define JOYSTICKTASTE2  27
+#define JOYSTICKTASTE3  41
+#define JOYSTICKTASTE4  63
+#define JOYSTICKTASTE5  90
+#define JOYSTICKTASTE6  120
+#define JOYSTICKTASTE7  155
+#define JOYSTICKTASTE8  185
+#define JOYSTICKTASTE9  206
+#define JOYSTICKTASTE10  224
+#define JOYSTICKTASTE11  236
+#define JOYSTICKTASTE12  248
+#define JOYSTICKTASTEL  250
+#define JOYSTICKTASTER  250
+#define JOYSTICKTASTE0  250
 
+
+#define OLED_RESET   -1
+#define OLED_CS      14
+#define OLED_DC      12
+#define OLED_CLK     13
+#define OLED_MOSI    11
+
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define SCREEN_ADDRESS 0x3C
+//Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+
+
+#define TASTEOK            1
+#define AKTIONOK           2
+#define UPDATEOK           3
 
 
 
