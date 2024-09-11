@@ -2899,7 +2899,7 @@ void loop()
       if (anschlagstruct.aktiv == 1)
       {
          anschlagstruct.aktiv = 0;
-         oled_delete(0,100,100);
+         oled_delete(0,100,30);
          u8g2.setCursor(0,100);
          //u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
          u8g2.print("*");
