@@ -994,7 +994,8 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
    else
    {
-      richtung &= ~(1 << RICHTUNG_D);
+      //richtung &= ~(1 << RICHTUNG_D);
+      richtung |= (1 << RICHTUNG_C);
       //digitalWriteFast(MD_RI, HIGH);
    }
 
@@ -1071,7 +1072,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    // // Serial.printf("AbschnittLaden_bres deltafastdirectionA: %d deltaslowdirectionA: %d  deltafastdelayA: %d errA: %d bres_counterA: %d bres_delayA: %d\n",deltafastdirectionA,deltaslowdirectionA, deltafastdelayA,errA,bres_counterA,bres_delayA);
 
    // bresenham Seite B
-
+   /*
    // relevanten Motor setzen
    if (StepCounterC > StepCounterD)
    {
@@ -1105,7 +1106,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    yB = StepCounterD;
 
    errB = deltafastdirectionB / 2;
-
+   */
    {
 
       timerintervall_FAST = TIMERINTERVALL;
@@ -1137,44 +1138,41 @@ void AnschlagVonMotor(const uint8_t motor)
    // lcd_gotoxy(2+2*motor,1);
    // lcd_puthex(motor);
    pfeiltastenrichtung = motor;
-   uint8_t endPin = END_A0_PIN;
-   uint8_t anschlagcheck = 99;
+   uint8_t endPin = 99;
+   uint8_t anschlagcheck = motor;
  //  switch (motor)
    {
  //  case 0:
-   {
+   
       if (digitalRead(END_A0_PIN) == 0)
       {
          endPin = END_A0_PIN;
-         anschlagcheck = motor;
+         
       }
       if (digitalRead(END_A1_PIN) == 0)
       {
          endPin = END_A1_PIN;
-         anschlagcheck = motor;
       }
 
       
       
-   }
+   
  //  break;
  //  case 1:
-   {
+   
       if (digitalRead(END_B0_PIN) == 0) 
       {
          endPin = END_B0_PIN;
-         anschlagcheck = motor;
       }
       if (digitalRead(END_B1_PIN) == 0)
       {
          endPin = END_B1_PIN;
-         anschlagcheck = motor;
       }
 
       
       
 
-   }
+   
    //break;
 /*
    case 2:
@@ -1901,7 +1899,7 @@ void tastenfunktion(uint16_t Tastenwert)
             
             
             //joystickbuffer[3] = 13;
-            
+            cli();
             switch (Taste)
             {
                case 0://
@@ -1943,7 +1941,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
 
                      }
-
+                     //uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
                   }
                }break;
 
@@ -2279,7 +2277,7 @@ void tastenfunktion(uint16_t Tastenwert)
                 */  
                   
             }//switch Taste
-            
+            sei();
             if (spidata & (1<<7))
             {
             //   spidata &= ~(1<<7);
