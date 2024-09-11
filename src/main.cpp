@@ -4215,10 +4215,11 @@ void loop()
    }
    if (digitalRead(END_A0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
    {
-      
+      /*
       //digitalWriteFast(LOOPLED,LOW);
       if ((anschlagstatus & (1 << END_A0)))// Schlitten war, aber ist nicht mehr am Anschlag
       {
+
          u8g2.setCursor(100,20);
          u8g2.print("E A0");
          u8g2.sendBuffer();
@@ -4226,10 +4227,12 @@ void loop()
          anschlagstatus &= ~(1 << END_A0); // Bit fuer Anschlag A0 zuruecksetzen
          
       }
+      */
    }
    else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag A0
    {
       //anschlagcount++;
+      /*
       if (richtung & (1 << (RICHTUNG_A))) // Richtung ist auf Anschlag A0 zu   (RICHTUNG_A ist 0)
       {
          anschlagcount++;
@@ -4240,7 +4243,7 @@ void loop()
       {
          //anschlagstruct.aktiv = 0;
       }
-
+      */
       AnschlagVonMotor(0); // Bewegung anhalten
 
    }
@@ -4252,6 +4255,7 @@ void loop()
 
    if (digitalRead(END_B0_PIN)) // Schlitten nicht am Anschlag B0
    {
+      /*
       if (anschlagstatus & (1 << END_B0))
       {
          u8g2.setCursor(50,90);
@@ -4260,16 +4264,18 @@ void loop()
          anschlagstatus &= ~(1 << END_B0); // Bit fuer Anschlag B0 zuruecksetzen
          
       }
+      */
    }
    else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag B0
    {
+      /*
        if (richtung & (1 << (RICHTUNG_B))) // Richtung ist auf Anschlag B0 zu   (RICHTUNG_A ist 0)
       {
          anschlagcount++;
          anschlagstruct.aktiv = 1;
         
       }
-      
+      */
       
       AnschlagVonMotor(1);
    
