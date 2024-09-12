@@ -1140,9 +1140,8 @@ void AnschlagVonMotor(const uint8_t motor)
    pfeiltastenrichtung = motor;
    uint8_t endPin = 99;
    uint8_t anschlagcheck = motor;
- //  switch (motor)
-   {
- //  case 0:
+   
+   // which Anschlagpin 
    
       if (digitalRead(END_A0_PIN) == 0)
       {
@@ -1154,12 +1153,6 @@ void AnschlagVonMotor(const uint8_t motor)
          endPin = END_A1_PIN;
       }
 
-      
-      
-   
- //  break;
- //  case 1:
-   
       if (digitalRead(END_B0_PIN) == 0) 
       {
          endPin = END_B0_PIN;
@@ -1169,41 +1162,6 @@ void AnschlagVonMotor(const uint8_t motor)
          endPin = END_B1_PIN;
       }
 
-      
-      
-
-   
-   //break;
-/*
-   case 2:
-   {
-      endPin = END_A1_PIN;
-      endBit = motor;
-   }
-   break;
-   
-   case 3:
-   {
-       endPin = END_D0;
-       endBit = motor;
-   }
-   break;
-   */
-   } // switch motor
-   
-   
-   
-   // Strom OFF
-   
-   //analogWrite(DC_PWM, 0);
-   /*
-   u8g2.setCursor(anschlagstruct.x-20,anschlagstruct.y+40);
-   u8g2.print(richtung);
-   u8g2.print("*");
-   u8g2.print(motor);
-   u8g2.print("*");
-   u8g2.sendBuffer();
-   */
    //anschlagstruct.aktiv = 1;
    
    
@@ -1211,7 +1169,7 @@ void AnschlagVonMotor(const uint8_t motor)
    //anschlagcount &= 0xFF;
    
    PWM = 0;
-   sendbuffer[0] = 0xA5 + motor;
+   sendbuffer[0] = 0xA5 + motor; // A5 ..
    sendbuffer[9] = anschlagcheck;
 
    if (richtung & (1 << (RICHTUNG_A + motor))) // Richtung ist auf Anschlag A0+motor zu   (RICHTUNG_A ist 0)
@@ -1314,9 +1272,20 @@ void AnschlagVonMotor(const uint8_t motor)
          {
             cncstatus = 0;
             
+            switch (motor)
+            {
+               case 0:  // Motor A A0
+               case 2:  // Motor A A1
+               {
 
-       
+               }break;
 
+               case 1: // Motor B B0
+               case 3: // Motor B B1
+               {
+
+               }break;
+            }
             deltafastdirectionA = 0;
             deltafastdirectionB = 0;
             deltaslowdirectionA = 0;
@@ -1375,10 +1344,10 @@ void AnschlagVonMotor(const uint8_t motor)
          u8g2.print(endPin);
          u8g2.setCursor(anschlagstruct.x,anschlagstruct.y+20);
          u8g2.print(anschlagcount);
-          u8g2.setCursor(anschlagstruct.x+10,anschlagstruct.y+20);
-          u8g2.print("+");
-         u8g2.print(pfeiltastenrichtung);
-         u8g2.print("+");
+         u8g2.setCursor(anschlagstruct.x+20,anschlagstruct.y+20);
+         u8g2.print("*");
+         u8g2.print(richtung);
+         u8g2.print("*");
     
          u8g2.sendBuffer();
 
@@ -1404,7 +1373,7 @@ void AnschlagVonMotor(const uint8_t motor)
    
       if ((anschlagstatus & (1 << (END_A0 + motor))))
       {
-            anschlagstatus &= ~(1 << (END_A0 + motor)); // Bit fuer Anschlag B0 zuruecksetzen
+            anschlagstatus &= ~(1 << (END_A0 + motor)); // Bit fuer Anschlag A0 + motor zuruecksetzen
       }
    }
    
@@ -4255,16 +4224,7 @@ void loop()
 
    if (digitalRead(END_B0_PIN)) // Schlitten nicht am Anschlag B0
    {
-      /*
-      if (anschlagstatus & (1 << END_B0))
-      {
-         u8g2.setCursor(50,90);
-         u8g2.print("E B0");
-         u8g2.sendBuffer();
-         anschlagstatus &= ~(1 << END_B0); // Bit fuer Anschlag B0 zuruecksetzen
-         
-      }
-      */
+     
    }
    else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag B0
    {
