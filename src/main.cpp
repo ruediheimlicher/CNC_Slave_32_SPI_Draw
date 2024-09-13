@@ -1271,21 +1271,34 @@ void AnschlagVonMotor(const uint8_t motor)
          else // beide Seiten abstellen
          {
             cncstatus = 0;
-            
+            /*
             switch (motor)
             {
                case 0:  // Motor A A0
                case 2:  // Motor A A1
                {
-
+                  deltafastdirectionA = 0;
+                  deltaslowdirectionA = 0;
+                  StepCounterA = 0;
+                  bres_counterA = 0;
+                  bres_delayA = 0;
+                  digitalWriteFast(MA_EN, HIGH);
                }break;
 
                case 1: // Motor B B0
                case 3: // Motor B B1
                {
+                 deltafastdirectionB = 0;
+                  deltaslowdirectionB = 0;
+                  StepCounterB = 0;
+                  bres_counterB = 0;
+                  bres_delayB = 0;
+                  digitalWriteFast(MB_EN, HIGH);
 
                }break;
             }
+            */
+            
             deltafastdirectionA = 0;
             deltafastdirectionB = 0;
             deltaslowdirectionA = 0;
@@ -1305,19 +1318,20 @@ void AnschlagVonMotor(const uint8_t motor)
             bres_counterB = 0;
             bres_delayB = 0;
 
-
-
+            digitalWriteFast(MA_EN, HIGH);
+            digitalWriteFast(MB_EN, HIGH);
+            
             ladeposition = 0;
             motorstatus = 0;
 
-            digitalWriteFast(MA_EN, HIGH);
-            digitalWriteFast(MB_EN, HIGH);
-            //digitalWriteFast(MC_EN, HIGH);
-            //digitalWriteFast(MD_EN, HIGH);
          }
          ladeposition=0;
          motorstatus=0;
-         
+
+         // TO DO
+         richtung &= ~(1 << (RICHTUNG_A + motor)); // Richtung umschalten
+         //
+
          sendbuffer[5] = (abschnittnummer & 0xFF00) >> 8;
          
          sendbuffer[6] = abschnittnummer & 0x00FF;
@@ -1351,7 +1365,7 @@ void AnschlagVonMotor(const uint8_t motor)
     
          u8g2.sendBuffer();
 
-         richtung &= ~(1 << (RICHTUNG_A + motor)); // Richtung umschalten
+         
 
          interrupts();
       } // NOT END_A0 +motor
