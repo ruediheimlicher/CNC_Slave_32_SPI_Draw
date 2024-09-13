@@ -339,4 +339,12 @@
 
 
 
+#define JOYSTICKSTARTIMPULS   200 // impuls bei Start Joystick von Tastatur aus
+#define JOYSTICKIMPULS        200 // impulsdauer
+#define JOYSTICKTOTBEREICH    25
+//#define JOYSTICKMINIMPULS     1000
+#define JOYSTICKMAXDIFF       4800
+#define JOYSTICKMAXTICKS      6000
+
+
 #endif /* settings_h */
