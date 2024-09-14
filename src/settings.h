@@ -69,7 +69,17 @@
 #define END_B0          5       //           Endanschlag B0 
 
 
+// Bits fuer endanschlagstatus in AnschlagVonEndPin
+#define ANSCHLAG_A0     0
+#define ANSCHLAG_A1     1
+#define ANSCHLAG_B0     2
+#define ANSCHLAG_B1     3
+
+
+
 // Auf Stepperport 2
+
+
 #define END_C0          6       //  Bit fuer Endanschlag C0 
 #define END_D0          7       //           Endanschlag D0 
 
