@@ -1030,31 +1030,68 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
 void AnschlagVonEndPin(const uint8_t endpin)
 {
+           
+      anschlagstruct.richtung = richtung;
+
       if ((digitalRead(END_A0_PIN) == 0) && (richtung & (1<<RICHTUNG_A))) // Anschlag an A0
       {
+         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'A');
+         //u8g2.print("*");
+         //u8g2.print(richtung);
+         //u8g2.print("*");
          //Motor A stoppen
          deltafastdirectionA = 0;
          deltafastdelayA = 0;
          deltaslowdirectionA = 0;
-         anschlagstruct.richtung = richtung;
+         anschlagstruct.data = RICHTUNG_A;
          
       }
     
 
-
-      if ((digitalRead(END_A1_PIN) == 0) &&  (richtung & (1<<RICHTUNG_C)))// Anschlag an A1
+      if ((digitalRead(END_A1_PIN) == 0) && (richtung & (1<<RICHTUNG_C)))// Anschlag an A1
       {
-
+         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'A');
+         //u8g2.print("*");
+         //u8g2.print(richtung);
+         //u8g2.print("*");
                //Motor A stoppen
-            deltafastdirectionA = 0;
-            deltafastdelayA = 0;
-            deltaslowdirectionA = 0;
+         deltafastdirectionA = 0;
+         deltafastdelayA = 0;
+         deltaslowdirectionA = 0;
+         anschlagstruct.data = RICHTUNG_C;
          
+      }
+
+        if (((digitalRead(END_B0_PIN) == 0) && (richtung & (1<<RICHTUNG_B))))// Anschlag an A1
+      {
+         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'B');
+            //Motor  stoppen
+            deltafastdirectionB = 0;
+            deltafastdelayB = 0;
+            deltaslowdirectionB = 0;
+            anschlagstruct.data = RICHTUNG_B;
+          //  u8g2.print("*");
+         //u8g2.print(richtung);
+         //u8g2.print("*");
+         
+      }
+
+        if ((digitalRead(END_B1_PIN) == 0) && (richtung & (1<<RICHTUNG_D)))// Anschlag an A1
+      {
+         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'B');
+               //Motor A stoppen
+         deltafastdirectionB = 0;
+         deltafastdelayB = 0;
+         deltaslowdirectionB = 0;
+         anschlagstruct.data = RICHTUNG_D;
+         //u8g2.print("*");
+         //u8g2.print(richtung);
+         //u8g2.print("*");
          
       }
 
 
-
+   anschlagstruct.aktiv = 1;
 
 
 }
@@ -1984,7 +2021,7 @@ void tastenfunktion(uint16_t Tastenwert)
                   {
                      servostatus |= SERVO_UP;
                      servopos = 200;
-                     servoC.write(servopos);
+                     //servoC.write(servopos);
                      digitalWriteFast(MC_EN,LOW);
                   }
                   // Serial.printf("Taste 1\n");
@@ -2703,14 +2740,14 @@ void setup()
    anschlagstruct.y = ANSCHLAG_Y;
    anschlagstruct.aktiv = 0;
 
-   //u8g2.setCursor(anschlagstruct.x-20,anschlagstruct.y);
-   //u8g2.print("Anschlag ");
+   u8g2.setCursor(0,anschlagstruct.y);
+   u8g2.print("Anschlag ");
     
    u8g2.sendBuffer();
    // https://www.pjrc.com/teensy/td_libs_Servo.html
-   servoC.attach(SERVO_PIN); 
+   //servoC.attach(SERVO_PIN); 
    servostatus |= SERVO_UP;
-   servoC.write(servopos);
+   //servoC.write(servopos);
    digitalWriteFast(MC_EN,LOW);
 }
 
@@ -2812,7 +2849,7 @@ void loop()
       if (anschlagstruct.aktiv == 1)
       {
          anschlagstruct.aktiv = 0;
-         oled_delete(0,100,120);
+      //   oled_delete(0,100,120);
          u8g2.setCursor(0,100);
          //u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
          u8g2.print("*");
@@ -2826,7 +2863,7 @@ void loop()
          u8g2.print(anschlagstruct.motor);
          u8g2.print("*");
       
-         u8g2.sendBuffer();  
+       //  u8g2.sendBuffer();  
       }
      
      
@@ -3043,7 +3080,7 @@ void loop()
          if(servopos > (SERVO_MIN + SERVO_SCHRITT))
          {
                   servopos -= SERVO_SCHRITT;
-                  servoC.write(servopos);
+                  //servoC.write(servopos);
          }
          else
          {
@@ -4132,143 +4169,7 @@ void loop()
    // * Anschlag  A *
    // ********************
    
-   //anschlagstruct.aktiv = 1;
-   if (anschlagstatus)
-   {     
- 
-   }
-   if (digitalRead(END_A0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag A0
-   {
-      /*
-      //digitalWriteFast(LOOPLED,LOW);
-      if ((anschlagstatus & (1 << END_A0)))// Schlitten war, aber ist nicht mehr am Anschlag
-      {
-
-         u8g2.setCursor(100,20);
-         u8g2.print("E A0");
-         u8g2.sendBuffer();
-         //digitalWriteFast(LOOPLED,LOW);
-         anschlagstatus &= ~(1 << END_A0); // Bit fuer Anschlag A0 zuruecksetzen
-         
-      }
-      */
-   }
-   else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag A0
-   {
-      //anschlagcount++;
-      /*
-      if (richtung & (1 << (RICHTUNG_A))) // Richtung ist auf Anschlag A0 zu   (RICHTUNG_A ist 0)
-      {
-         anschlagcount++;
-         anschlagstruct.aktiv = 1;
-        
-      }
-      else
-      {
-         //anschlagstruct.aktiv = 0;
-      }
-      
-      anschlagstruct.data = richtung;
-      anschlagstruct.aktiv = 1;
-      anschlagstruct.motor = 0;
-      */
-      //AnschlagVonMotor(0); // Bewegung anhalten
-   }
-      AnschlagVonEndPin(0);
-   
-   // #pragma mark Anschlag   Motor B
-   //  **************************************
-   //  * Anschlag  B *
-   //  **************************************
-   // AnschlagVonMotor(1);
-
-   if (digitalRead(END_B0_PIN)) // Schlitten nicht am Anschlag B0
-   {
-     
-   }
-   else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag B0
-   {
-      /*
-       if (richtung & (1 << (RICHTUNG_B))) // Richtung ist auf Anschlag B0 zu   (RICHTUNG_A ist 0)
-      {
-         anschlagcount++;
-         anschlagstruct.aktiv = 1;
-        
-      }
-      */
-      anschlagstruct.data = richtung;
-      anschlagstruct.aktiv = 1;
-      anschlagstruct.motor = 1;
-      //AnschlagVonMotor(1);
-      AnschlagVonEndPin(0);
-   
-   } // end Anschlag B0
-
-   // End Anschlag B
-
-   // #pragma mark Anschlag   Motor C //
-   //  ********************
-   //  * Anschlag  C *
-   //  ********************
-   // AnschlagVonMotor(2);
-
-   // Anschlag C0
-   if (digitalRead(END_A1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag C0
-   {
-      /*
-      if (anschlagstatus & (1 << END_C0))
-      {
-         anschlagstatus &= ~(1 << END_C0); // Bit fuer Anschlag C0 zuruecksetzen
-      }
-      */
-   }
-   else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag C0
-   {
-      if (richtung & (1 << (RICHTUNG_C))) // Richtung ist auf Anschlag B0 zu   (RICHTUNG_A ist 0)
-      {
-         //anschlagcount++;
-        // anschlagstruct.aktiv = 1;
-        
-      }
-      anschlagstruct.data = richtung;
-      anschlagstruct.aktiv = 1;
-      anschlagstruct.motor = 0;
-      // Serial.printf("Motor C an C0\n");
-      //AnschlagVonMotor(2);
-      AnschlagVonEndPin(0);
-   }
-
-   // #pragma mark Anschlag   Motor D
-   //  ***************
-   //  * Anschlag  D *
-   //  ***************
-
-   // Anschlag D0
-   if (digitalRead(END_B1_PIN)) // Schlitten nicht am Anschlag D0
-   {
-      /*
-      if (anschlagstatus & (1 << END_D0))
-      {
-         anschlagstatus &= ~(1 << END_D0); // Bit fuer Anschlag D0 zuruecksetzen
-      }
-      */
-   }
-   else // Schlitten bewegte sich auf Anschlag zu und ist am Anschlag D0
-   {
-      // Serial.printf("Motor D an D0\n");
-       if (richtung & (1 << (RICHTUNG_D))) // Richtung ist auf Anschlag D0 zu   (RICHTUNG_A ist 0)
-      {
-         anschlagcount++;
-         anschlagstruct.aktiv = 1;
-        
-      }
-      anschlagstruct.data = richtung;
-      anschlagstruct.aktiv = 1;
-      anschlagstruct.motor = 0;
-     // AnschlagVonMotor(3);
-      AnschlagVonEndPin(0);
-   }
-
+   AnschlagVonEndPin(0);
    // #pragma mark Motor A B
    // // Serial.printf("deltafastdirectionA: %d deltafastdirectionB: %d  \n",deltafastdirectionA,deltafastdirectionB);
 
