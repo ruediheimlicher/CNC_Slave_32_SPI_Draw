@@ -50,7 +50,7 @@
 #include "settings.h"
 #include <Servo.h> 
 
-Servo servoC; 
+//Servo servoC; 
 
 #include <U8g2lib.h>
 
@@ -1030,7 +1030,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
 void AnschlagVonEndPin(const uint8_t endpin)
 {
-           
+         
       anschlagstruct.richtung = richtung;
 
       if ((digitalRead(END_A0_PIN) == 0) && (richtung & (1<<RICHTUNG_A))) // Anschlag an A0
@@ -1044,7 +1044,8 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltafastdelayA = 0;
          deltaslowdirectionA = 0;
          anschlagstruct.data = RICHTUNG_A;
-         
+         anschlagstruct.motor = 0;
+         anschlagstruct.aktiv = 1;
       }
     
 
@@ -1059,7 +1060,8 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltafastdelayA = 0;
          deltaslowdirectionA = 0;
          anschlagstruct.data = RICHTUNG_C;
-         
+         anschlagstruct.motor = 0;
+         anschlagstruct.aktiv = 1;
       }
 
         if (((digitalRead(END_B0_PIN) == 0) && (richtung & (1<<RICHTUNG_B))))// Anschlag an A1
@@ -1070,10 +1072,11 @@ void AnschlagVonEndPin(const uint8_t endpin)
             deltafastdelayB = 0;
             deltaslowdirectionB = 0;
             anschlagstruct.data = RICHTUNG_B;
+            anschlagstruct.motor = 1;
           //  u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
-         
+         anschlagstruct.aktiv = 1;
       }
 
         if ((digitalRead(END_B1_PIN) == 0) && (richtung & (1<<RICHTUNG_D)))// Anschlag an A1
@@ -1084,15 +1087,16 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltafastdelayB = 0;
          deltaslowdirectionB = 0;
          anschlagstruct.data = RICHTUNG_D;
+         anschlagstruct.motor = 1;
          //u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
-         
+         anschlagstruct.aktiv = 1;
       }
 
 
-   anschlagstruct.aktiv = 1;
-
+   //anschlagstruct.aktiv = 1;
+   
 
 }
 
@@ -1104,7 +1108,7 @@ void AnschlagVonMotor(const uint8_t motor)
    // lcd_putc('A');
    // lcd_gotoxy(2+2*motor,1);
    // lcd_puthex(motor);
-   pfeiltastenrichtung = motor;
+   //pfeiltastenrichtung = motor;
    uint8_t endPin = 99;
    uint8_t anschlagcheck = motor;
    
@@ -1818,13 +1822,14 @@ void tastenfunktion(uint16_t Tastenwert)
             tastestruct.aktiv = 1;
             tastestruct.data = Taste;
 
+            /*
             oled_delete(0,80,120);
             u8g2.setCursor(0,80);
             u8g2.print(Tastenwert);
             u8g2.print(" ");
             u8g2.print(Taste);
             u8g2.print(" ");
-            
+            */
 
             // Serial.printf("Tastenwert: %d Taste: %d \n",Taste,Tastenwert);
             tastaturcounter=0;
@@ -1833,7 +1838,7 @@ void tastenfunktion(uint16_t Tastenwert)
             uint8_t spidata = Taste;
 
             uint8_t spijoystickdata = Taste;
-            
+            richtung = 0;
             
             //joystickbuffer[3] = 13;
             cli();
@@ -1856,7 +1861,7 @@ void tastenfunktion(uint16_t Tastenwert)
                      if (digitalRead(END_B0_PIN)==0)
                      {
                         joystickbuffer[3] = DOWN; // del Anschlagind oben
-
+                        
                         //oled_frame(anschlagstruct.x,anschlagstruct.y,40);                   
                         oled_delete(anschlagstruct.x,anschlagstruct.y,90);
                         oled_delete(0,anschlagstruct.y+20,100);
@@ -1869,7 +1874,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
                         endimpulsdauer = TASTENENDIMPULSDAUER;
                         tastaturstep = MB_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
-
+                        pfeiltastenrichtung = UP;
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,HIGH);
                         richtung = (1<<RICHTUNG_D);
@@ -1905,6 +1910,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,LOW);
                         richtung = (1<<RICHTUNG_B);
+                        pfeiltastenrichtung = DOWN;
                         joystickbuffer[2] = richtung;
                         joystickbuffer[4] = 55;//rand() % 20 + 1;
                         uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
@@ -1945,7 +1951,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MA_EN,LOW);
                         digitalWriteFast(MA_RI,LOW);
                         richtung = (1<<RICHTUNG_A); // 0x01
-
+                        pfeiltastenrichtung = LEFT;
                      
                       joystickbuffer[2] = richtung;
                      joystickbuffer[4] = 77;//rand() % 20 + 1;
@@ -1988,7 +1994,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         pfeilrampcounter = 0;
                         endimpulsdauer = TASTENENDIMPULSDAUER;
                         tastaturstep = MA_STEP;
-
+                        pfeiltastenrichtung = RIGHT;
                         digitalWriteFast(MA_RI,HIGH);
                         digitalWriteFast(MA_EN,LOW);
                         richtung = (1<<RICHTUNG_C); // 0x04
@@ -2229,6 +2235,7 @@ void tastenfunktion(uint16_t Tastenwert)
                 */  
                   
             }//switch Taste
+            anschlagstruct.aktiv = 1;
             sei();
             if (spidata & (1<<7))
             {
@@ -2849,16 +2856,16 @@ void loop()
       if (anschlagstruct.aktiv == 1)
       {
          anschlagstruct.aktiv = 0;
-      //   oled_delete(0,100,120);
+         oled_delete(0,100,120);
          u8g2.setCursor(0,100);
          //u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
-         u8g2.print("*");
+         //u8g2.print(" ");
          u8g2.print(anschlagstruct.data);
-         u8g2.print("R");
+         u8g2.print(" R");
          u8g2.print(anschlagstruct.richtung);
-         u8g2.print("P");
+         u8g2.print(" P");
          u8g2.print(pfeiltastenrichtung);
-         u8g2.print("*");
+         u8g2.print(" ");
          u8g2.print("M");
          u8g2.print(anschlagstruct.motor);
          u8g2.print("*");
@@ -4614,14 +4621,7 @@ void loop()
                   aktuelleladeposition = (ladeposition & 0x00FF);
                   aktuelleladeposition &= 0x03;
 
-                  /*
-                  // // Serial.printf("Motor CD: aktuellelage code vor: %d\nAbschnittdaten vor Funktion: \n",CNCDaten[aktuelleladeposition][17]);
-                  for(uint8_t i=0;i<27;i++) // 5 us ohne printf, 10ms mit printf
-                  {
-                     // // Serial.printf("%d \t",CNCDaten[aktuelleladeposition][i]);
-                  }
-                  // // Serial.printf("\n");
-                  */
+                  
                   // aktuellen Abschnitt laden
                   aktuellelage = AbschnittLaden_bres(CNCDaten[aktuelleladeposition]);
 
@@ -4666,8 +4666,10 @@ void loop()
       {
          // // Serial.printf("F");
          // STEPPERPORT_2 |= (1<<MC_STEP);               // Impuls an Motor C HI -> OFF
+         /*
          if (digitalReadFast(MC_STEP) == 0) // 100 ns
          {
+            
             // // Serial.printf("step beenden\n");
             if (stepdurC)
             {
@@ -4677,7 +4679,9 @@ void loop()
             {
                //digitalWriteFast(MC_STEP, HIGH);
             }
+
          }
+         */
          /*
          if (digitalReadFast(MD_STEP) == 0) // 100 ns
          {
