@@ -101,6 +101,9 @@ volatile uint32_t StepCounterC = 0; // Zaehler fuer Schritte von Motor C
 volatile uint32_t StepCounterD = 0; // Zaehler fuer Schritte von Motor D
 
 volatile uint8_t richtung = 0;
+
+volatile uint8_t richtungA = 0; // Richtung Motor A
+volatile uint8_t richtungB = 0; // Richtung Motor B
 volatile uint8_t homestatus = 0;
 
 volatile uint8_t parallelcounter = 0;

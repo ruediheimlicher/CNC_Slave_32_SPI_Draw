@@ -699,7 +699,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    //u8g2.setDrawColor(1);
 
    // Index angeben
-   u8g2.setCursor(90,90);
+   u8g2.setCursor(90,80);
    u8g2.print(index);
    u8g2.sendBuffer();
    if (AbschnittDaten[35] == 1)
@@ -744,6 +744,8 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
 
    richtung = 0;
+   richtungA = 0;
+   richtungB = 0;
 
    // *****************
    // Motor A
@@ -763,7 +765,9 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    int8_t vz = 1;
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
-      richtung |= (1 << RICHTUNG_A); // Rueckwarts
+      richtung |= (1 << RICHTUNG_A); // Rueckwarts LEFT
+      richtungA = (1 << RICHTUNG_A); // Rueckwarts LEFT
+
       digitalWriteFast(MA_RI, LOW);  // PIN fuer Treiber stellen
       //digitalWriteFast(MA_RI, HIGH);
       vz = -1;
@@ -771,7 +775,8 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
    else
    {
-      richtung |= (1 << RICHTUNG_C); //** * / Vorwarts
+      richtung |= (1 << RICHTUNG_C); //** * / Vorwarts RIGHT
+      richtungA = (1 << RICHTUNG_C); //** * / Vorwarts RIGHT
       digitalWriteFast(MA_RI, HIGH);
    }
 
@@ -806,12 +811,14 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
       richtung |= (1 << RICHTUNG_B); // Rueckwarts
+      richtungB = (1 << RICHTUNG_B); //** * / Vorwarts RIGHT
       digitalWriteFast(MB_RI, LOW);  // lcd_putc('r');
       vz = -1;
    }
    else
    {
       richtung |= (1 << RICHTUNG_D);
+      richtungB = (1 << RICHTUNG_D); //** * / Vorwarts RIGHT
       digitalWriteFast(MB_RI, HIGH);
    }
 
@@ -1878,6 +1885,9 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,HIGH);
                         richtung = (1<<RICHTUNG_D);
+                        richtungB = (1<<RICHTUNG_D);
+
+
                         joystickbuffer[2] = richtung;
                         anschlagstruct.richtung = richtung;
                         anschlagstruct.aktiv = 1;
@@ -1912,6 +1922,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,LOW);
                         richtung = (1<<RICHTUNG_B);
+                        richtungB = (1<<RICHTUNG_B);
                         anschlagstruct.richtung = richtung;
                         anschlagstruct.aktiv = 1;
                         joystickbuffer[2] = richtung;
@@ -1954,6 +1965,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MA_EN,LOW);
                         digitalWriteFast(MA_RI,LOW);
                         richtung = (1<<RICHTUNG_A); // 0x01
+                        richtungA = (1 << RICHTUNG_A); // Rueckwarts LEFT
                         anschlagstruct.richtung = richtung;
                         anschlagstruct.aktiv = 1;
                      
@@ -2002,6 +2014,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MA_RI,HIGH);
                         digitalWriteFast(MA_EN,LOW);
                         richtung = (1<<RICHTUNG_C); // 0x04
+                        richtungA = (1 << RICHTUNG_C); // Vorwarts RIGHT
                         // joystickbuffer[3] = LEFT; // del Anschlagind links
                         anschlagstruct.richtung = richtung;
                         joystickbuffer[2] = richtung;
@@ -2860,7 +2873,7 @@ void loop()
       if (anschlagstruct.aktiv == 1)
       {
          anschlagstruct.aktiv = 0;
-         //oled_delete(0,100,120);
+         oled_delete(0,100,100);
          u8g2.setCursor(0,100);
          //u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
          u8g2.print("*");
@@ -4008,9 +4021,9 @@ void loop()
                motorstatus = 0;
                ringbufferstatus = 0x00;
                anschlagstatus = 0;
-               u8g2.setCursor(10,90);
-               u8g2.print("AAA");
-               u8g2.sendBuffer();
+               //u8g2.setCursor(10,90);
+               //u8g2.print("AAA");
+               //u8g2.sendBuffer();
                ringbufferstatus |= (1 << FIRSTBIT);
                AbschnittCounter = 0;
                // sendbuffer[8]= versionintl;
