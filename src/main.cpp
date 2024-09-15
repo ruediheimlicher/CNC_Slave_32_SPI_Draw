@@ -1035,7 +1035,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
 
       if ((digitalRead(END_A0_PIN) == 0) && (richtung & (1<<RICHTUNG_A))) // Anschlag an A0 OK
       {
-         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'A');
+         u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0");
          //u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
@@ -1045,13 +1045,13 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltafastdelayA = 0;
          deltaslowdirectionA = 0;
          anschlagstruct.data = RICHTUNG_A;
-         
+         anschlagstruct.aktiv = 1;
       }
     
 
       if ((digitalRead(END_A1_PIN) == 0) && (richtung & (1<<RICHTUNG_C)))// Anschlag an A1
       {
-         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'A');
+         u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A1");
          //u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
@@ -1060,12 +1060,12 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltafastdelayA = 0;
          deltaslowdirectionA = 0;
          anschlagstruct.data = RICHTUNG_C;
-         
+         anschlagstruct.aktiv = 1;
       }
 
         if (((digitalRead(END_B0_PIN) == 0) && (richtung & (1<<RICHTUNG_B))))// Anschlag an B0 OK
       {
-         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'B');
+         u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"B0");
             //Motor  stoppen
             deltafastdirectionB = 0;
             deltafastdelayB = 0;
@@ -1074,12 +1074,13 @@ void AnschlagVonEndPin(const uint8_t endpin)
           //  u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
-         
+         anschlagstruct.aktiv = 1;
       }
 
         if ((digitalRead(END_B1_PIN) == 0) && (richtung & (1<<RICHTUNG_D)))// Anschlag an B1
       {
-         u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'B');
+
+         u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"B1");
                //Motor A stoppen
          deltafastdirectionB = 0;
          deltafastdelayB = 0;
@@ -1088,11 +1089,11 @@ void AnschlagVonEndPin(const uint8_t endpin)
          //u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
-         
+         anschlagstruct.aktiv = 1;
       }
 
 
-   anschlagstruct.aktiv = 1;
+   
 
 
 }
@@ -1839,6 +1840,7 @@ void tastenfunktion(uint16_t Tastenwert)
             
             
             //joystickbuffer[3] = 13;
+            oled_delete(0,100,120);
             cli();
             switch (Taste)
             {
@@ -1877,6 +1879,8 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MB_RI,HIGH);
                         richtung = (1<<RICHTUNG_D);
                         joystickbuffer[2] = richtung;
+                        anschlagstruct.richtung = richtung;
+                        anschlagstruct.aktiv = 1;
                         joystickbuffer[4] = 44;//rand() % 20 + 1;
                         uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
 
@@ -1908,6 +1912,8 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,LOW);
                         richtung = (1<<RICHTUNG_B);
+                        anschlagstruct.richtung = richtung;
+                        anschlagstruct.aktiv = 1;
                         joystickbuffer[2] = richtung;
                         joystickbuffer[4] = 55;//rand() % 20 + 1;
                         uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
@@ -1948,7 +1954,8 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MA_EN,LOW);
                         digitalWriteFast(MA_RI,LOW);
                         richtung = (1<<RICHTUNG_A); // 0x01
-
+                        anschlagstruct.richtung = richtung;
+                        anschlagstruct.aktiv = 1;
                      
                       joystickbuffer[2] = richtung;
                      joystickbuffer[4] = 77;//rand() % 20 + 1;
@@ -1996,9 +2003,10 @@ void tastenfunktion(uint16_t Tastenwert)
                         digitalWriteFast(MA_EN,LOW);
                         richtung = (1<<RICHTUNG_C); // 0x04
                         // joystickbuffer[3] = LEFT; // del Anschlagind links
-                     
-                     joystickbuffer[2] = richtung;
-                     joystickbuffer[4] = 88;//rand() % 20;;
+                        anschlagstruct.richtung = richtung;
+                        joystickbuffer[2] = richtung;
+                        anschlagstruct.aktiv = 1;
+                        joystickbuffer[4] = 88;//rand() % 20;;
 
                      uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
                      }
@@ -2848,17 +2856,19 @@ void loop()
          u8g2.print(tastestruct.data);
          u8g2.sendBuffer();  
       }
-
+      
       if (anschlagstruct.aktiv == 1)
       {
          anschlagstruct.aktiv = 0;
-      //   oled_delete(0,100,120);
+         //oled_delete(0,100,120);
          u8g2.setCursor(0,100);
          //u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
          u8g2.print("*");
          u8g2.print(anschlagstruct.data);
-         u8g2.print("R");
+         u8g2.print(" R");
+         //u8g2.print("*");
          u8g2.print(anschlagstruct.richtung);
+         u8g2.print(" ");
          u8g2.print("P");
          u8g2.print(pfeiltastenrichtung);
          u8g2.print("*");
@@ -2866,7 +2876,7 @@ void loop()
          u8g2.print(anschlagstruct.motor);
          u8g2.print("*");
       
-       //  u8g2.sendBuffer();  
+         u8g2.sendBuffer();  
       }
      
      
@@ -4307,12 +4317,12 @@ void loop()
                // // Serial.printf("Motor A endpos > BD\n");
                ringbufferstatus = 0;
                // home:
-               u8g2.setCursor(10,70);
-               u8g2.setDrawColor(0);
+               //u8g2.setCursor(10,70);
+               //u8g2.setDrawColor(0);
                //u8g2.drawBox(10, 70-charh,40,charh);
-               oled_delete(10,70,40);
-               u8g2.setDrawColor(1);
-               u8g2.sendBuffer();
+               //oled_delete(10,70,40);
+               //u8g2.setDrawColor(1);
+               //u8g2.sendBuffer();
                motorstatus &= ~(1 << COUNT_A);
                motorstatus = 0;
 
