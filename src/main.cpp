@@ -1033,12 +1033,13 @@ void AnschlagVonEndPin(const uint8_t endpin)
            
       anschlagstruct.richtung = richtung;
 
-      if ((digitalRead(END_A0_PIN) == 0) && (richtung & (1<<RICHTUNG_A))) // Anschlag an A0
+      if ((digitalRead(END_A0_PIN) == 0) && (richtung & (1<<RICHTUNG_A))) // Anschlag an A0 OK
       {
          u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'A');
          //u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
+
          //Motor A stoppen
          deltafastdirectionA = 0;
          deltafastdelayA = 0;
@@ -1054,7 +1055,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          //u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
-               //Motor A stoppen
+         //Motor A stoppen
          deltafastdirectionA = 0;
          deltafastdelayA = 0;
          deltaslowdirectionA = 0;
@@ -1062,7 +1063,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          
       }
 
-        if (((digitalRead(END_B0_PIN) == 0) && (richtung & (1<<RICHTUNG_B))))// Anschlag an A1
+        if (((digitalRead(END_B0_PIN) == 0) && (richtung & (1<<RICHTUNG_B))))// Anschlag an B0 OK
       {
          u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'B');
             //Motor  stoppen
@@ -1076,7 +1077,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          
       }
 
-        if ((digitalRead(END_B1_PIN) == 0) && (richtung & (1<<RICHTUNG_D)))// Anschlag an A1
+        if ((digitalRead(END_B1_PIN) == 0) && (richtung & (1<<RICHTUNG_D)))// Anschlag an B1
       {
          u8g2.drawGlyph(anschlagstruct.x,anschlagstruct.y,'B');
                //Motor A stoppen
@@ -1818,13 +1819,15 @@ void tastenfunktion(uint16_t Tastenwert)
             tastestruct.aktiv = 1;
             tastestruct.data = Taste;
 
+            // Taste und Tastenwert anzeigen
+            /*
             oled_delete(0,80,120);
             u8g2.setCursor(0,80);
             u8g2.print(Tastenwert);
             u8g2.print(" ");
             u8g2.print(Taste);
             u8g2.print(" ");
-            
+            */
 
             // Serial.printf("Tastenwert: %d Taste: %d \n",Taste,Tastenwert);
             tastaturcounter=0;
@@ -4470,7 +4473,7 @@ void loop()
    //  **************************************
    //  * Motor C D *
    //  **************************************
-
+   /*
    // Es hat noch Steps, CounterC ist abgezaehlt (bres_delayB bestimmt Impulsabstand fuer Steps)
    if (deltafastdirectionB > 0)
    {
@@ -4514,7 +4517,7 @@ void loop()
             }
             if (yB >=0)
             {
-               /**/
+               
                if (ddyB && (yB >=0)) // Motor D soll steppen
                {
                   //digitalWriteFast(MD_STEP, LOW);
@@ -4614,14 +4617,7 @@ void loop()
                   aktuelleladeposition = (ladeposition & 0x00FF);
                   aktuelleladeposition &= 0x03;
 
-                  /*
-                  // // Serial.printf("Motor CD: aktuellelage code vor: %d\nAbschnittdaten vor Funktion: \n",CNCDaten[aktuelleladeposition][17]);
-                  for(uint8_t i=0;i<27;i++) // 5 us ohne printf, 10ms mit printf
-                  {
-                     // // Serial.printf("%d \t",CNCDaten[aktuelleladeposition][i]);
-                  }
-                  // // Serial.printf("\n");
-                  */
+               
                   // aktuellen Abschnitt laden
                   aktuellelage = AbschnittLaden_bres(CNCDaten[aktuelleladeposition]);
 
@@ -4678,19 +4674,7 @@ void loop()
                //digitalWriteFast(MC_STEP, HIGH);
             }
          }
-         /*
-         if (digitalReadFast(MD_STEP) == 0) // 100 ns
-         {
-            if (stepdurD)
-            {
-               stepdurD--;
-            }
-            if (stepdurD == 0)
-            {
-               digitalWriteFast(MD_STEP, HIGH);
-            }
-         }
-         */
+         
          if ((xB == 0))
          {
             if (digitalReadFast(MC_EN) == 0)
@@ -4700,19 +4684,11 @@ void loop()
                //digitalWriteFast(MC_EN, HIGH);
             }
          }
-         /*
-         if ((yB == 0))
-         {
-            if (digitalReadFast(MD_EN) == 0)
-            {
-               // Motoren ausschalten
-               // // Serial.printf("Motor D ausschalten\n");
-               digitalWriteFast(MD_EN, HIGH);
-            }
-         }
-         */
+         
       }
+      
    }
+   */
    // // Serial.printf("G\n");
    interrupts();
 
@@ -4723,5 +4699,5 @@ void loop()
    //interrupts();
    // End Motor D
 
-   /**   End CNC-routinen   ***********************/
+   /* *   End CNC-routinen   ***********************/
 }
