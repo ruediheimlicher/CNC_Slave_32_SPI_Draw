@@ -789,7 +789,6 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    out_data[STEPCOUNTERA_H] = (StepCounterA & 0xFF00)>>8;
    out_data[STEPCOUNTERA_L] = StepCounterA & 0x00FF;
    
-   StepStartA = StepCounterA;
 
    delayL = AbschnittDaten[4];
    delayH = AbschnittDaten[5];
@@ -803,6 +802,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
    // CounterB=0;
    digitalWriteFast(MB_EN, LOW); // Pololu B ON
+
    dataL = AbschnittDaten[2];
    dataH = AbschnittDaten[3];
    // lcd_gotoxy(19,1);
@@ -825,9 +825,9 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    dataH &= (0x7F);
 
    StepCounterB = dataL | (dataH << 8);
-   // int16_t newday = StepCounterB * vz;
 
    StepCounterB *= micro;
+
    out_data[STEPCOUNTERB_H] = (StepCounterB & 0xFF00)>>8;
    out_data[STEPCOUNTERB_L] = StepCounterB & 0x00FF;
  
@@ -835,7 +835,10 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
    CounterB = DelayB;
 
+   /*
+   // *****************
    // Motor C
+   // *****************
    //digitalWriteFast(MC_EN, LOW); // Pololu ON
    // CounterC=0;
    dataL = 0;
@@ -857,7 +860,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    else
    {
     // ***  richtung &= ~(1 << RICHTUNG_C);
-      digitalWriteFast(MA_RI, HIGH);
+      digitalWriteFast(MC_RI, HIGH);
       // // Serial.printf("AbschnittLaden_bres C positiv\n");
    }
 
@@ -905,7 +908,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
 
    dataH &= (0x7F);
-   /*
+   
    StepCounterD = dataL | (dataH << 8);
    StepCounterD *= micro;
 
@@ -1040,55 +1043,59 @@ void AnschlagVonEndPin(const uint8_t endpin)
            
       anschlagstruct.richtung = richtung;
 
-      if ((digitalRead(END_A0_PIN) == 0) && (richtung & (1<<RICHTUNG_A))) // Anschlag an A0 OK
+      if ((digitalRead(END_A0_PIN) == 0) && (richtungA & (1<<RICHTUNG_A))) // Anschlag an A0 OK
       {
          u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0");
-         //u8g2.print("*");
-         //u8g2.print(richtung);
-         //u8g2.print("*");
-
+         
          //Motor A stoppen
          deltafastdirectionA = 0;
          deltafastdelayA = 0;
          deltaslowdirectionA = 0;
          anschlagstruct.data = RICHTUNG_A;
+         richtungA = 0;
          anschlagstruct.aktiv = 1;
+         ladeposition=0;
+         motorstatus=0;
       }
     
 
-      if ((digitalRead(END_A1_PIN) == 0) && (richtung & (1<<RICHTUNG_C)))// Anschlag an A1
+      if ((digitalRead(END_A1_PIN) == 0) && (richtungA & (1<<RICHTUNG_C)))// Anschlag an A1
       {
          u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A1");
-         //u8g2.print("*");
-         //u8g2.print(richtung);
-         //u8g2.print("*");
+         
          //Motor A stoppen
          deltafastdirectionA = 0;
          deltafastdelayA = 0;
          deltaslowdirectionA = 0;
          anschlagstruct.data = RICHTUNG_C;
+         richtungA = 0;
          anschlagstruct.aktiv = 1;
+         ladeposition=0;
+         motorstatus=0;
       }
 
-        if (((digitalRead(END_B0_PIN) == 0) && (richtung & (1<<RICHTUNG_B))))// Anschlag an B0 OK
+      if ((digitalRead(END_B0_PIN) == 0) && (richtungB & (1<<RICHTUNG_B)))// Anschlag an B0 OK
       {
          u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"B0");
-            //Motor  stoppen
-            deltafastdirectionB = 0;
-            deltafastdelayB = 0;
-            deltaslowdirectionB = 0;
-            anschlagstruct.data = RICHTUNG_B;
-          //  u8g2.print("*");
+         //Motor B stoppen
+         
+         deltafastdirectionB = 0;
+         deltafastdelayB = 0;
+         deltaslowdirectionB = 0;
+         anschlagstruct.data = RICHTUNG_B;
+         //u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
+         //richtungB = 0;
          anschlagstruct.aktiv = 1;
+         
       }
 
-        if ((digitalRead(END_B1_PIN) == 0) && (richtung & (1<<RICHTUNG_D)))// Anschlag an B1
+      if ((digitalRead(END_B1_PIN) == 0) && (richtungB & (1<<RICHTUNG_D)))// Anschlag an B1
       {
-
          u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"B1");
-               //Motor A stoppen
+         //Motor B stoppen
+         
          deltafastdirectionB = 0;
          deltafastdelayB = 0;
          deltaslowdirectionB = 0;
@@ -1096,7 +1103,9 @@ void AnschlagVonEndPin(const uint8_t endpin)
          //u8g2.print("*");
          //u8g2.print(richtung);
          //u8g2.print("*");
+         //richtungB = 0;
          anschlagstruct.aktiv = 1;
+         
       }
 
 
@@ -2032,8 +2041,8 @@ void tastenfunktion(uint16_t Tastenwert)
                   if(servopos > 100)
                   {
                      servostatus |= (1<<SERVO_DOWN);
-                     //servopos = 100;
-                     //servoC.write(servopos);
+                     servopos = 100;
+                     servoC.write(servopos);
                      digitalWriteFast(MC_EN,LOW);
                   }
               
@@ -2045,7 +2054,7 @@ void tastenfunktion(uint16_t Tastenwert)
                   {
                      servostatus |= SERVO_UP;
                      servopos = 200;
-                     //servoC.write(servopos);
+                     servoC.write(servopos);
                      digitalWriteFast(MC_EN,LOW);
                   }
                   // Serial.printf("Taste 1\n");
@@ -2571,12 +2580,12 @@ void setup()
    //digitalWriteFast(MD_STEP, HIGH); // HI
    //digitalWriteFast(MD_RI, HIGH);   // HI
    //digitalWriteFast(MD_EN, HIGH);   // HI
-
+/*
    pinMode(END_A0_PIN, INPUT); //
    pinMode(END_B0_PIN, INPUT); //
    pinMode(END_A1_PIN, INPUT); //
    pinMode(END_B1_PIN, INPUT); //
-
+*/
    pinMode(END_A0_PIN, INPUT_PULLUP); // HI
    pinMode(END_B0_PIN, INPUT_PULLUP); //
    pinMode(END_A1_PIN, INPUT_PULLUP); //
@@ -2769,9 +2778,9 @@ void setup()
     
    u8g2.sendBuffer();
    // https://www.pjrc.com/teensy/td_libs_Servo.html
-   //servoC.attach(SERVO_PIN); 
+   servoC.attach(SERVO_PIN); 
    servostatus |= SERVO_UP;
-   //servoC.write(servopos);
+   servoC.write(servopos);
    digitalWriteFast(MC_EN,LOW);
 }
 
