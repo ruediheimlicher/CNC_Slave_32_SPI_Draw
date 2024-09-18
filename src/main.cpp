@@ -1848,6 +1848,7 @@ void tastenfunktion(uint16_t Tastenwert)
             
             //joystickbuffer[3] = 13;
             oled_delete(0,100,120);
+            oled_delete(0,120,40);
             cli();
             switch (Taste)
             {
@@ -1862,8 +1863,11 @@ void tastenfunktion(uint16_t Tastenwert)
                   
                case 8:     // up      weg vom Motor                       //  
                {
+                  
                   if (digitalRead(END_B1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B1
                   {
+                     u8g2.setCursor(0,120);
+                     u8g2.print("T 8");
                      joystickbuffer[0] = 0x80 + UP;
                      if (digitalRead(END_B0_PIN)==0)
                      {
