@@ -1049,11 +1049,11 @@ void AnschlagVonEndPin(const uint8_t endpin)
        
          if(OLED)
          {
-            
+            oled_delete(0,anschlagstruct.y,120);
          u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0 ");
-         u8g2.setCursor(anschlagstruct.x+30,anschlagstruct.y);
+         //u8g2.setCursor(anschlagstruct.x+30,anschlagstruct.y);
          //u8g2.print("*");
-         u8g2.print(cncstatus);
+         //u8g2.print(cncstatus);
          //u8g2.print("*");
          }
 
@@ -1068,9 +1068,9 @@ void AnschlagVonEndPin(const uint8_t endpin)
          
          if(cncstatus & (1 << GO_HOME))
          {
-            //oled_delete(0,anschlagstruct.y,120);
+            oled_delete(0,anschlagstruct.y,120);
             u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME");
-            //AbschnittLaden_bres(CNCDaten[1]);
+            AbschnittLaden_bres(CNCDaten[1]);
 
          }
          
@@ -1081,7 +1081,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
       {
          if(OLED)
          {
-            oled_delete(0,anschlagstruct.y,120);
+         oled_delete(0,anschlagstruct.y,120);
          u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A1");
          //u8g2.print("*");
          //u8g2.print(richtung);
@@ -1112,6 +1112,13 @@ void AnschlagVonEndPin(const uint8_t endpin)
             anschlagstruct.data = RICHTUNG_B;
          digitalWriteFast(MB_EN,HIGH);
          anschlagstruct.aktiv = 1;
+         richtungB = 0;
+         //if(cncstatus & (1 << GO_HOME))
+         {
+            cncstatus &= ~(1 << GO_HOME);
+         
+         }
+
       }
 
         if ((digitalRead(END_B1_PIN) == 0) && (richtungB & (1<<RICHTUNG_D)))// Anschlag an B1
