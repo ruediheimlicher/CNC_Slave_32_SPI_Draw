@@ -1034,6 +1034,11 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    return returnwert;
 }
 
+void goHome(void)
+{
+
+}
+
 void AnschlagVonEndPin(const uint8_t endpin)
 {
            
@@ -1041,14 +1046,17 @@ void AnschlagVonEndPin(const uint8_t endpin)
 
       if ((digitalRead(END_A0_PIN) == 0) && (richtungA & (1<<RICHTUNG_A))) // Anschlag an A0 OK
       {
+       
          if(OLED)
          {
-            oled_delete(0,anschlagstruct.y,120);
-         u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0");
+            
+         u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0 ");
+         u8g2.setCursor(anschlagstruct.x+30,anschlagstruct.y);
          //u8g2.print("*");
-         //u8g2.print(richtung);
+         u8g2.print(cncstatus);
          //u8g2.print("*");
          }
+
          //Motor A stoppen
          digitalWriteFast(MA_EN,HIGH);
          deltafastdirectionA = 0;
@@ -1056,12 +1064,22 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltaslowdirectionA = 0;
          anschlagstruct.data = RICHTUNG_A;
          anschlagstruct.aktiv = 1;
+         richtungA = 0;
+         
+         if(cncstatus & (1 << GO_HOME))
+         {
+            //oled_delete(0,anschlagstruct.y,120);
+            u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME");
+            //AbschnittLaden_bres(CNCDaten[1]);
+
+         }
+         
       }
     
 
       if ((digitalRead(END_A1_PIN) == 0) && (richtungA & (1<<RICHTUNG_C)))// Anschlag an A1
       {
-         //if(OLED)
+         if(OLED)
          {
             oled_delete(0,anschlagstruct.y,120);
          u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A1");
@@ -1098,7 +1116,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
 
         if ((digitalRead(END_B1_PIN) == 0) && (richtungB & (1<<RICHTUNG_D)))// Anschlag an B1
       {
-         //if(OLED)
+         if(OLED)
          {
             oled_delete(anschlagstruct.x,anschlagstruct.y,(128 - anschlagstruct.x));
             u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"B1");
@@ -3887,12 +3905,12 @@ void loop()
             // Strom OFF
             analogWrite(DC_PWM, 0);
 
-             abschnittnummer = 0; // diff 220520
+            abschnittnummer = 0; // diff 220520
 
             ladeposition = 0;
             endposition = 0xFFFF;
             cncstatus = 0;
-            motorstatus |= 0;
+            motorstatus = 0;
             ringbufferstatus = 0x00;
             anschlagstatus = 0;
             ringbufferstatus |= (1 << FIRSTBIT);
@@ -3900,33 +3918,65 @@ void loop()
             ringbufferstatus |= (1 << LASTBIT);
             uint8_t lage = buffer[17];
             AbschnittCounter = 0;
-            // sendbuffer[8]= versionintl;
-            // sendbuffer[8]= versioninth;
-
+           
             sendbuffer[0] = 0xF1;
+            // Abschnittnummer bestimmen
+            uint8_t indexh = buffer[18];
+            uint8_t indexl = buffer[19];
+            abschnittnummer = indexh << 8;
+            abschnittnummer += indexl;
+
+            endposition = abschnittnummer;
+
+
+
 
             cncstatus |= (1 << GO_HOME); // Bit fuer go_home setzen
             //sendbuffer[63] = 1;
             sendbuffer[22] = cncstatus;
 
+
+
             // Daten vom buffer in CNCDaten laden
+         
+            uint8_t pos = 0;
+            pos &= 0x03; // 2 bit // Beschraenkung des index auf Buffertiefe
+            // if (abschnittnummer>8)
             {
-               uint8_t pos = 0;
-               pos &= 0x03; // 2 bit // Beschraenkung des index auf Buffertiefe
-               // if (abschnittnummer>8)
-               {
-                  // lcd_putint1(pos);
-               }
-               uint8_t i = 0;
-               for (i = 0; i < USB_DATENBREITE; i++)
-               {
-                  if (i < 5)
-                  {
-                     //  lcd_puthex(buffer[i]);
-                  }
-                  CNCDaten[pos][i] = buffer[i];
-               }
+               // lcd_putint1(pos);
             }
+            uint8_t i = 0;
+            for (i = 0; i < USB_DATENBREITE; i++)
+            {
+               if (i < 5)
+               {
+                  //  lcd_puthex(buffer[i]);
+               }
+               CNCDaten[pos][i] = buffer[i];
+               CNCDaten[pos+1][i] = buffer[i];
+
+            }
+            CNCDaten[pos+1][0] = 0;
+            CNCDaten[pos+1][1] = 0;
+            CNCDaten[pos+1][2] = buffer[0];
+            CNCDaten[pos+1][3] = buffer[1];
+
+            CNCDaten[pos+1][4] = 0;
+            CNCDaten[pos+1][5] = 0;
+            CNCDaten[pos+1][6] = buffer[4];
+            CNCDaten[pos+1][7] = buffer[5];
+
+            CNCDaten[pos+1][17] = 2; // lage:  end
+
+            CNCDaten[pos+1][19] = 2; // index
+
+            CNCDaten[pos+1][22] = 0;
+            CNCDaten[pos+1][27] = 1;
+
+         
+
+         //ampstatus |= (1 << RAMPOKBIT);
+            //ramptimerintervall = TIMERINTERVALL;
             startTimer2();
 
             // F0 melden
@@ -3994,23 +4044,14 @@ void loop()
             // // Serial.printf("default Abschnitt lage: %d abschnittnummer: %d\n",lage,abschnittnummer);
             // // Serial.printf("****************************************\n");
 
-            //              usb_rawhid_send((void*)sendbuffer, 0); // nicht jedes Paket melden
+            //  usb_rawhid_send((void*)sendbuffer, 0); // nicht jedes Paket melden
 
             if (abschnittnummer == 0)
             {
                // anschlagstatus &= ~(1<< END_A0); // 220518 diff
                //   lcd_clr_line(1);
                cli();
-               /*
-               uint8_t i=0,k=0;
-               for (k=0;k<RINGBUFFERTIEFE;k++)
-               {
-               for(i=0;i<USB_DATENBREITE;i++)
-               {
-               CNCDaten[k][i]=0;
-               }
-               }
-               */
+               
                // CNCDaten = {};
 
                ladeposition = 0;
@@ -4024,8 +4065,7 @@ void loop()
                //u8g2.sendBuffer();
                ringbufferstatus |= (1 << FIRSTBIT);
                AbschnittCounter = 0;
-               // sendbuffer[8]= versionintl;
-               // sendbuffer[8]= versioninth;
+               
                sendbuffer[5] = 0x00;
 
                // in teensy3.2: timerintervall
