@@ -14,6 +14,10 @@
 
 #define JOYSTICK 0
 
+#define SERVO 1
+#define OLED 0
+
+
 #define EEPROMCALIB 0x10
 
 // Stepper A
