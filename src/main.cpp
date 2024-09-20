@@ -1071,9 +1071,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
             oled_delete(0,anschlagstruct.y,120);
             u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME");
             AbschnittLaden_bres(CNCDaten[1]);
-
          }
-         
       }
     
 
@@ -1109,14 +1107,42 @@ void AnschlagVonEndPin(const uint8_t endpin)
             deltafastdirectionB = 0;
             deltafastdelayB = 0;
             deltaslowdirectionB = 0;
+            bres_counterA = 0;
+            bres_delayA = 0;
+
+
+
             anschlagstruct.data = RICHTUNG_B;
-         digitalWriteFast(MB_EN,HIGH);
-         anschlagstruct.aktiv = 1;
-         richtungB = 0;
-         //if(cncstatus & (1 << GO_HOME))
+            digitalWriteFast(MA_EN, HIGH);
+            digitalWriteFast(MB_EN,HIGH);
+            anschlagstruct.aktiv = 1;
+            richtungB = 0;
+         if(cncstatus & (1 << GO_HOME))
          {
+            digitalWriteFast(MA_EN,HIGH);
             cncstatus &= ~(1 << GO_HOME);
-         
+            abschnittnummer = 0; //
+            ladeposition = 0;
+            endposition = 0xFFFF;
+            cncstatus = 0;
+            motorstatus = 0;
+            ringbufferstatus = 0x00;
+            anschlagstatus = 0;
+            uint8_t i = 0;
+
+            
+            for (i = 0; i < USB_DATENBREITE; i++)
+            {
+               CNCDaten[0][i] = 0;
+               CNCDaten[1][i] = 0;
+            }
+            
+
+            taskstatus = 0;
+            //pfeilrampcounter = 0;
+            //endimpulsdauer = ENDIMPULSDAUER;
+            //analogtastaturstatus &= ~(1<<TASTE_ON);
+
          }
 
       }
@@ -1878,8 +1904,6 @@ void tastenfunktion(uint16_t Tastenwert)
                u8g2.print(Taste);
                u8g2.print(" "); 
             }
-            
-            
 
             // Serial.printf("Tastenwert: %d Taste: %d \n",Taste,Tastenwert);
             tastaturcounter=0;
@@ -1897,6 +1921,12 @@ void tastenfunktion(uint16_t Tastenwert)
             ringbufferstatus = 0;
             cncstatus = 0;
             ladeposition = 0;
+            oled_delete(100,70,40);
+            u8g2.setCursor(100,70);
+            //u8g2.print("C0 ");
+            u8g2.print(Taste);
+            u8g2.sendBuffer();
+
             switch (Taste)
             {
                case 0://
@@ -1908,7 +1938,7 @@ void tastenfunktion(uint16_t Tastenwert)
                }
                   break;
                   
-               case 8:     // up      weg vom Motor                       //  
+               case 8: // up      weg vom Motor                       //  
                {
                   
                   if (digitalRead(END_B1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B1
@@ -1970,7 +2000,7 @@ void tastenfunktion(uint16_t Tastenwert)
                      if(OLED)
                      {
                         u8g2.setCursor(0,120);
-                     u8g2.print("T2 ");
+                        u8g2.print("T2 ");
                      }
                      
                       joystickbuffer[0] = 0x80 + DOWN;
@@ -1998,8 +2028,6 @@ void tastenfunktion(uint16_t Tastenwert)
                         u8g2.print("Ri B ");
                         u8g2.print(richtungB);
                      }
-                        
-
                         anschlagstruct.richtung = richtung;
                         anschlagstruct.aktiv = 1;
                         joystickbuffer[2] = richtung;
@@ -2028,12 +2056,10 @@ void tastenfunktion(uint16_t Tastenwert)
                      {
                         joystickbuffer[3] = RIGHT; // del Anschlagind rechts
                         if(OLED)
-                     {
-                         oled_delete(anschlagstruct.x,anschlagstruct.y,50);
-                        oled_delete(0,anschlagstruct.y+20,100);
-                     }
-                       
-
+                        {
+                           oled_delete(anschlagstruct.x,anschlagstruct.y,50);
+                           oled_delete(0,anschlagstruct.y+20,100);
+                        }
                      }
                      if (pfeiltastecode == 0)
                      {
@@ -2078,9 +2104,9 @@ void tastenfunktion(uint16_t Tastenwert)
                      {
                        joystickbuffer[3] = LEFT; // del Anschlagind rechts
                         
-                        if(OLED)
+                     if(OLED)
                      {
-                         oled_delete(anschlagstruct.x,anschlagstruct.y,50);   
+                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);   
                         oled_delete(0,anschlagstruct.y+20,100);
                      }
                        
@@ -3350,9 +3376,7 @@ void loop()
             {
                uint8_t vorzeichenx = buffer[4];
 
-               uint16_t dx = buffer[0] | ((buffer[1] << 8) & 0x7F);
-
-           
+               uint16_t dx = buffer[0] | ((buffer[1] << 8) & 0x7F);        
             }
             if (StepCounterB)
             {
@@ -3597,7 +3621,10 @@ void loop()
          ////#pragma mark C0 Pfeiltaste (von AV manFeldRichtung)
          case 0xC0: // mousedown
          {
-            //// Serial.printf("case C0\n");
+            oled_delete(100,70,20);
+            u8g2.setCursor(100,70);
+            u8g2.print("C0");
+            u8g2.sendBuffer();
             sendbuffer[24] = buffer[32];
 
             // Abschnittnummer bestimmen
@@ -3622,9 +3649,7 @@ void loop()
             anschlagstatus = 0;
             digitalWriteFast(MA_EN,HIGH);
             digitalWriteFast(MB_EN,HIGH);
-            // u8g2.setCursor(10,70);
-            //   u8g2.print("DDD");
-            //   u8g2.sendBuffer();
+            
             
             ringbufferstatus |= (1 << FIRSTBIT);
             ringbufferstatus |= (1 << STARTBIT);
@@ -3648,7 +3673,6 @@ void loop()
 
             oled_delete(0,anschlagstruct.y,90);
 
-
             taskstatus |= (1<<TASK);
             sendbuffer[0] = 0xC1;
             sendbuffer[29] = pfeiltastenrichtung;
@@ -3666,8 +3690,6 @@ void loop()
             }
             //    
             //endanschlagstatus = 0;
-
-
          }
          break;
 
