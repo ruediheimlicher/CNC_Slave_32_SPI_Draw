@@ -73,6 +73,9 @@ void oled_delete(uint8_t x,uint8_t y,uint8_t l);
 void oled_fill(uint8_t x,uint8_t y,uint8_t l);
 void oled_frame(uint8_t x,uint8_t y,uint8_t l);
 
+void home_horizontal(void);
+
+
 struct anschlag_struct
 {
    uint8_t x;
@@ -84,9 +87,9 @@ struct anschlag_struct
 };
 struct anschlag_struct anschlagstruct;
 
-
-
-
+//uint8_t horizontalarray[] = {128,165,0,0,8,0,0,0,128,165,0,0,8,0,0,0,194,3,0,0,0,1,1,48,240,0,0,0,0,0,0,17,3,0,128,0};
+//uint8_t horizontalarray[] = {189, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t horizontalarray[] = {192, 221, 0, 0, 10, 0, 0, 0, 192, 221, 0, 0, 10, 0, 0, 0, 240, 3, 0, 0, 0, 1, 1, 48, 240, 0, 240, 0, 0, 0, 0, 17, 3, 0, 128, 0};
 uint8_t anschlagcount = 0;
 
 struct oled_struct indexstruct;
@@ -385,6 +388,7 @@ uint8_t oldTaste = 0;
 volatile uint8_t        pfeiltastecode = 0;
 // IntervalTimer for Tastatur
 IntervalTimer tastaturTimer;
+uint16_t tastaturtimercounter = 0;
 
 volatile uint16_t tastaturimpulscounter = 0; // PWM fuer Tastaturimpulse
 volatile uint8_t tastaturmotorport = 0xFF; // aktiver Port bei Tastendruck
@@ -579,6 +583,10 @@ void tastaturtimerFunktion(void) // TASTENSTARTIMPULSDAUER
    // bei jedem fire wird ein impuls gestartet oder nach IMPULSBREITE beendet
    if (tastaturindex % 2) // ungerade, Impuls starten
    {
+      if(tastaturtimercounter)
+      {
+         tastaturtimercounter--;
+      }
       switch (tastaturstep)
       {
          case MA_STEP:
@@ -595,10 +603,11 @@ void tastaturtimerFunktion(void) // TASTENSTARTIMPULSDAUER
             {
                tastaturTimer.update(IMPULSBREITE);
                digitalWriteFast(tastaturstep,HIGH); // Impuls starten
+               
             }
 
-
          }break;
+
          case MB_STEP:  
          {
             
@@ -778,7 +787,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
       richtungA = (1 << RICHTUNG_C); //** * / Vorwarts RIGHT
       digitalWriteFast(MA_RI, HIGH);
    }
-
+   
    dataH &= (0x7F);                     // bit 8 entfernen
    StepCounterA = dataL | (dataH << 8); //
 
@@ -794,7 +803,11 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    delayH = AbschnittDaten[5];
 
    DelayA = delayL | (delayH << 8);
-
+   
+  // u8g2.print("+");
+  // u8g2.print(richtungA);
+  // u8g2.print("+");
+  
    CounterA = DelayA;
    // *****************
    // Motor B
@@ -820,7 +833,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
       richtungB = (1 << RICHTUNG_D); //** * / Vorwarts RIGHT
       digitalWriteFast(MB_RI, HIGH);
    }
-
+   
    dataH &= (0x7F);
 
    StepCounterB = dataL | (dataH << 8);
@@ -856,7 +869,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    else
    {
     // ***  richtung &= ~(1 << RICHTUNG_C);
-      digitalWriteFast(MA_RI, HIGH);
+      digitalWriteFast(MC_RI, HIGH);
       // // Serial.printf("AbschnittLaden_bres C positiv\n");
    }
 
@@ -904,6 +917,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    }
 
    dataH &= (0x7F);
+   
    /*
    StepCounterD = dataL | (dataH << 8);
    StepCounterD *= micro;
@@ -926,6 +940,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    deltaslowdirectionB = 0;
    deltafastdelayA = 0;
    deltafastdelayB = 0;
+
 
    // bresenham Seite A
 
@@ -1017,6 +1032,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
       //  OSZIB_LO();
    }
 
+
    // motorstatus: welcher Motor ist relevant
    motorstatus = AbschnittDaten[21];
 
@@ -1031,6 +1047,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    //OSZIA_HI();
    
    tastaturstatus = 0 ;
+
    return returnwert;
 }
 
@@ -1043,7 +1060,8 @@ void AnschlagVonEndPin(const uint8_t endpin)
 {
            
       anschlagstruct.richtung = richtung;
-
+      //u8g2.setCursor(60,120);
+      //u8g2.print("PIN");
       if ((digitalRead(END_A0_PIN) == 0) && (richtungA & (1<<RICHTUNG_A))) // Anschlag an A0 OK
       {
        
@@ -1056,6 +1074,8 @@ void AnschlagVonEndPin(const uint8_t endpin)
          //u8g2.print(cncstatus);
          //u8g2.print("*");
          }
+         
+         //u8g2.print("A0");
 
          //Motor A stoppen
          digitalWriteFast(MA_EN,HIGH);
@@ -1085,6 +1105,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          //u8g2.print(richtung);
          //u8g2.print("*");
          }
+         //u8g2.print("A1");
          //Motor A stoppen
          digitalWriteFast(MA_EN,HIGH);
          deltafastdirectionA = 0;
@@ -1103,6 +1124,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          //u8g2.print(richtung);
          //u8g2.print("*");
          }
+            //u8g2.print("B0");
             //Motor  stoppen
             deltafastdirectionB = 0;
             deltafastdelayB = 0;
@@ -1159,7 +1181,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
             u8g2.print("*");
 
          }
-         
+         //u8g2.print("B1");
          //Motor B stoppen
          deltafastdirectionB = 0;
          deltafastdelayB = 0;
@@ -1172,7 +1194,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
 
 
    
-
+      //u8g2.sendBuffer();
 
 }
 
@@ -1909,6 +1931,7 @@ void tastenfunktion(uint16_t Tastenwert)
             tastaturcounter=0;
             Tastenwert=0x00;
             pfeiltastecode = 0;
+
             uint8_t spidata = Taste;
 
             uint8_t spijoystickdata = Taste;
@@ -2130,7 +2153,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         anschlagstruct.richtung = richtung;
                         joystickbuffer[2] = richtung;
                         anschlagstruct.aktiv = 1;
-                        joystickbuffer[4] = 88;//rand() % 20;;
+                        joystickbuffer[4] = 88;//rand() % 20;
 
                      uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
                      }
@@ -2300,29 +2323,33 @@ void tastenfunktion(uint16_t Tastenwert)
                   uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
 
                }break;
-                  /*
+                  
                case 10: // set Nullpunkt
                {
-                  // Serial.printf("Taste 10\n");
+
+                  home_horizontal();
                   break;
-                  uint32_t pos_A = motor_A.getPosition();
-                  
-                  uint32_t pos_B = motor_B.getPosition();
-                  // Serial.printf("vor reset: pos A: %d pos B: %d\n",pos_A, pos_B);
-                  
-                  motor_A.setPosition(0);
-                  motor_B.setPosition(0);
-                  
-                  pos_A = motor_A.getPosition();
-                  pos_B = motor_B.getPosition();
-                  // Serial.printf("nach reset: pos A: %d pos B: %d\n",pos_A, pos_B);
-                  
-                  //motor_C.setTargetAbs(0);
-                  //digitalWriteFast(MC_EN,LOW);
-                  //controller.move(motor_C);
-                  
+                  tastaturtimercounter = 500;
+                   //pfeiltastecode = LEFT;
+                  pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
+                  pfeilrampcounter = 0;
+                  endimpulsdauer = TASTENENDIMPULSDAUER;
+                  tastaturstep = MA_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
+
+                  digitalWriteFast(MA_EN,LOW);
+                  digitalWriteFast(MA_RI,LOW);
+                  richtung = (1<<RICHTUNG_A); // 0x01
+                  richtungA = (1 << RICHTUNG_A); // Rueckwarts LEFT
+                  anschlagstruct.richtung = richtung;
+                  anschlagstruct.aktiv = 1;
+                  tastaturimpulscounter = 0;
+                  pfeiltastecode = 0;
+
+                  tastaturTimer.begin(tastaturtimerFunktion,TASTENSTARTIMPULSDAUER);
+                  rampimpulsdauer = TASTENSTARTIMPULSDAUER;
+                  tastaturindex=0;
                }break;
-               */
+               
               /*
                case 12:// 
                {
@@ -2418,6 +2445,102 @@ void tastenfunktion(uint16_t Tastenwert)
          u8g2.sendBuffer();
       }
    }
+}
+
+void home_horizontal(void)
+{
+   oled_delete(0,120,100);
+   u8g2.setCursor(0,120);
+   u8g2.print("H");
+   //taskstatus |= (1<<TASK);
+   //taskstatus |= (1<<RUNNING);
+   PWM = 0;
+   abschnittnummer = 0;
+
+   //digitalWriteFast(MA_EN, LOW); // Pololu A ON LEFT
+   richtungA = (1 << RICHTUNG_A); // Rueckwarts LEFT
+   //digitalWriteFast(MA_RI, LOW);  // PIN fuer Treiber stellen
+   abschnittnummer = 0; // diff 220520
+
+   ladeposition = 0;
+   endposition = 0xFFFF;
+   cncstatus = 0;
+   motorstatus = 0;
+   ringbufferstatus = 0;
+   anschlagstatus = 0;
+   //   uint8_t lage = buffer[17];
+   AbschnittCounter = 0;
+   
+   sendbuffer[0] = 0xF0;
+   //endposition = abschnittnummer; // bewirkt nur 1 Richtung
+
+   
+   cncstatus |= (1 << GO_HOME); // Bit fuer go_home setzen
+
+   uint8_t pos = 0;
+   uint8_t i = 0;
+   for (i = 0; i < USB_DATENBREITE; i++)
+   {
+      CNCDaten[pos][i] = 0;
+      CNCDaten[pos+1][i] = 0;
+   }
+   //u8g2.print("A");
+   
+   // Motor A
+   uint8_t dataL = 128;
+   uint8_t dataH = 210;
+
+   uint8_t delayL = 8;
+   uint8_t delayH = 0;
+   CNCDaten[pos][0] = dataL;
+   CNCDaten[pos][1] = dataH;
+
+   // Motor B
+   CNCDaten[pos+1][2] = dataL; // schritteax
+   CNCDaten[pos+1][3] = dataH;  // schritteay
+
+
+   CNCDaten[pos][4] = delayL;
+   CNCDaten[pos][5] = delayH;
+
+   CNCDaten[pos+1][6] = delayL;
+   CNCDaten[pos+1][7] = delayH;
+
+   //CNCDaten[pos][16] = 0xF0;
+   //CNCDaten[pos+1][16] = 0xF0;
+   
+   CNCDaten[pos][17] = 1 ; // lage
+   CNCDaten[pos+1][17] = 3 ; // lage
+
+   CNCDaten[pos][25] = 48; // steps
+   CNCDaten[pos+1][25] = 48; // steps
+
+   CNCDaten[pos][26] = 1; // micro
+   CNCDaten[pos+1][26] = 1; // micro
+
+   rampstatus |= (1 << RAMPOKBIT);
+
+   //u8g2.print("L");
+   //lage = AbschnittLaden_bres(CNCDaten[pos]);
+   //u8g2.print(lage);
+
+   //u8g2.print("*");
+   //u8g2.print(richtungA);
+   //u8g2.print("*");
+   //u8g2.print(errA);
+   //u8g2.print("*");
+   //u8g2.print(bres_counterA);
+   
+   ringbufferstatus |= (1 << STARTBIT);
+  
+   //taskstatus |= (1<<TASK);
+   
+   
+   startTimer2(); // essentiell fuer Start!
+ 
+   
+
+   //u8g2.sendBuffer(); 
 }
 
 uint16_t fixjoystickMitte(uint8_t stick) // Mitte lesen
@@ -2978,12 +3101,21 @@ void loop()
 
       // OLED
       
+         oled_delete(0,100,100);
+         u8g2.setCursor(50,100);
+         u8g2.print("*");
+         
+         u8g2.print(bres_counterA);
+         //u8g2.print(" R");
+         u8g2.print("*");
+         //u8g2.sendBuffer();
+
       if (tastestruct.aktiv)
       {
          tastestruct.aktiv = 0;
          u8g2.setCursor(tastestruct.x,tastestruct.y);
          u8g2.print(tastestruct.data);
-         u8g2.sendBuffer();  
+         //u8g2.sendBuffer();  
       }
       
       if (anschlagstruct.aktiv == 1)
@@ -2993,9 +3125,10 @@ void loop()
          u8g2.setCursor(0,100);
          //u8g2.setCursor(anschlagstruct.x,anschlagstruct.y);
          u8g2.print("*");
-         u8g2.print(anschlagstruct.data);
-         u8g2.print(" R");
-         //u8g2.print("*");
+         
+         u8g2.print(stepdurA);
+         //u8g2.print(" R");
+         u8g2.print("*");
          u8g2.print(anschlagstruct.richtung);
          u8g2.print(" ");
          u8g2.print("P");
@@ -4196,7 +4329,7 @@ void loop()
 
    if (ringbufferstatus & (1 << STARTBIT)) // Buffer ist in Ringbuffer geladen, Schnittdaten von Abschnitt 0 laden
    {
-      // noInterrupts();
+               
 
       //     // Serial.printf("\n\n                 Abschnitt 0 laden ringbufferstatus: %d\n",ringbufferstatus);
       ringbufferstatus &= ~(1 << STARTBIT); // Startbit entfernen
@@ -4210,11 +4343,10 @@ void loop()
 
       ////#pragma mark default Ersten Abschnitt laden
 
-      // // Serial.printf("+++ Ersten Abschnitt laden AbschnittLaden_bres len: %d ringbufferstatus: %d micro: %d \n",l,ringbufferstatus, micro);
-      //     uint8_t lage=AbschnittLaden_bres(CNCDaten[ladeposition]); // erster Wert im Ringbuffer
-
+    
+          
       uint8_t lage = AbschnittLaden_bres(CNCDaten[ladeposition]); // erster Wert im Ringbuffer
-
+      
       // Gradient
       int8_t vz = 1;                           // vorzeichen
       uint8_t axh = CNCDaten[ladeposition][1]; // hi byte
@@ -4232,10 +4364,7 @@ void loop()
       }
       lastday = (CNCDaten[ladeposition][2] | ((CNCDaten[ladeposition][3] & 0x7F) << 8)) * vz;
 
-      // // Serial.printf("\n+++ \nErster Abschnitt lastdax: %d lastday: %d \n",lastdax,lastday);
-
-      // // Serial.printf("+++ Erster Abschnitt lage nach AbschnittLaden_bres: %d\n",lage);
-      ladeposition++;
+       ladeposition++;
       if (lage == 2) // nur ein Abschnitt
       {
          // // Serial.printf("Abschnitt 0 laden nur 1 Abschnitt cncstatus: %d\n", cncstatus);
@@ -4249,6 +4378,8 @@ void loop()
       //      startTimer2();
       //      // // Serial.printf("motorstatus: %d\n",motorstatus);
       // Serial.printf("+++   +++   +++    Erster Abschnitt end\n");
+      //u8g2.print("end");
+      
    } // 1 << STARTBIT: Ersten Abschnitt laden
 
 
@@ -4257,19 +4388,21 @@ void loop()
    ////#pragma mark Anschlag
 
    // Anschlagsituation abfragen
-   ////#pragma mark Anschlag   Motor A
+   
    // ********************
-   // * Anschlag  A *
+   // * Anschlag  A, B *
    // ********************
    
    AnschlagVonEndPin(0);
-   // #pragma mark Motor A B
-   // // Serial.printf("deltafastdirectionA: %d deltafastdirectionB: %d  \n",deltafastdirectionA,deltafastdirectionB);
+
 
    // **************************************
    // * Motor A,B *
    // **************************************
    //noInterrupts();
+   //u8g2.print("MA");
+   //u8g2.sendBuffer();
+   
 
    if (deltafastdirectionA > 0) // Bewegung auf Seite A vorhanden
    {
@@ -4278,7 +4411,8 @@ void loop()
       if ((bres_counterA > 0) && (bres_delayA == 0) && ((!(anschlagstatus & (1 << END_A0))) && (!(anschlagstatus & (1 << END_B0)))))
       {
          // start ramp
-
+         //u8g2.print("MA");
+         //u8g2.print(bres_counterA);
          if (rampstatus & (1 << RAMPSTARTBIT))
          {
             if (ramptimerintervall > timerintervall_FAST) // noch nicht auf max speed
@@ -4286,7 +4420,6 @@ void loop()
                 if (rampstatus & (1 << RAMPOKBIT))
                {
                   ramptimerintervall -= RAMPSCHRITT;
-
                   delayTimer.update(ramptimerintervall);
                   // rampbreite++;
                }
@@ -4305,7 +4438,7 @@ void loop()
             }
          } //  RAMPSTARTBIT
 
-
+         
 
          // end ramp
 
@@ -4397,13 +4530,10 @@ void loop()
                // // Serial.printf("Motor A endpos > BD\n");
                ringbufferstatus = 0;
                // home:
-               //u8g2.setCursor(10,70);
+               
                //u8g2.setDrawColor(0);
                //u8g2.drawBox(10, 70-charh,40,charh);
-               //oled_delete(10,70,40);
-               //u8g2.setDrawColor(1);
-               //u8g2.sendBuffer();
-               motorstatus &= ~(1 << COUNT_A);
+                motorstatus &= ~(1 << COUNT_A);
                motorstatus = 0;
 
                sendbuffer[0] = 0xBD;
@@ -4504,6 +4634,7 @@ void loop()
 
          //       interrupts();
          //OSZIC_HI();
+         //u8g2.sendBuffer();
       }
       else // if (bres_counterA == 0)
       {
