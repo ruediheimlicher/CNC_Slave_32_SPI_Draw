@@ -338,7 +338,7 @@
 #define SERVO_UP      0
 #define SERVO_DOWN    1
 #define SERVO_SCHRITT 1
-#define SERVO_DIV     0x0C
+#define SERVO_DIV     0x0A
 
 #define SERVO_MIN   100
 #define SERVO_MAX   200

@@ -700,12 +700,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    micro = AbschnittDaten[26];
 
    uint16_t index = (AbschnittDaten[18] << 8) | AbschnittDaten[19];
-   //u8g2.setCursor(90,80);
-   //u8g2.print("     ");
-   //u8g2.setDrawColor(0);
-   //u8g2.drawBox(90,80-charh,15,charh);
-   //u8g2.setDrawColor(1);
-
+ 
    // Index angeben
    //u8g2.setCursor(90,80);
    //u8g2.print(index);
@@ -725,18 +720,6 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    analogWrite(DC_PWM, PWM);
 
    // // Serial.printf("AbschnittLaden_bres AbschnittDaten eingang index: %d\n", index);
-
-   /*
-   for(uint8_t i=0;i<27;i++) // 5 us ohne printf, 10ms mit printf
-   {
-      // // Serial.printf("%d \t",AbschnittDaten[i]);
-   }
-   // // Serial.printf("\n");
-
- //  // Serial.printf("AbschnittLaden_bres steps: %d micro: %d\n",motorsteps,micro);
-
-   //   lage = AbschnittDaten[9]; // Start: 1, innerhalb: 0, Ende: 2
-    */
 
    int lage = 0;
    lage = AbschnittDaten[17]; // Start: 1, innerhalb: 0, Ende: 2
@@ -768,8 +751,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
    dataL = AbschnittDaten[0];
    dataH = AbschnittDaten[1];
-   //SPI_out2data(101,dataL);
-   // lcd_gotoxy(17,0);
+   
    int8_t vz = 1;
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
@@ -803,11 +785,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    delayH = AbschnittDaten[5];
 
    DelayA = delayL | (delayH << 8);
-   
-  // u8g2.print("+");
-  // u8g2.print(richtungA);
-  // u8g2.print("+");
-  
+     
    CounterA = DelayA;
    // *****************
    // Motor B
@@ -1068,11 +1046,8 @@ void AnschlagVonEndPin(const uint8_t endpin)
          if(OLED)
          {
             oled_delete(0,anschlagstruct.y,120);
-         u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0 ");
-         //u8g2.setCursor(anschlagstruct.x+30,anschlagstruct.y);
-         //u8g2.print("*");
-         //u8g2.print(cncstatus);
-         //u8g2.print("*");
+            u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0 ");
+         
          }
          
          //u8g2.print("A0");
@@ -1101,9 +1076,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          {
          oled_delete(0,anschlagstruct.y,120);
          u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A1");
-         //u8g2.print("*");
-         //u8g2.print(richtung);
-         //u8g2.print("*");
+         
          }
          //u8g2.print("A1");
          //Motor A stoppen
@@ -1120,9 +1093,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          if(OLED)
          {
             u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"B0");
-          //  u8g2.print("*");
-         //u8g2.print(richtung);
-         //u8g2.print("*");
+          
          }
             //u8g2.print("B0");
             //Motor  stoppen
@@ -1257,8 +1228,7 @@ void AnschlagVonMotor(const uint8_t motor)
          {
             // Paralleler Schlitten gleichzeitig am Anschlag?
 
-            // Serial.printf("*** Anschlag Home motor %d\n", motor);
-            // lcd_putc('B');
+           
             //  code:
             sendbuffer[0] = 0xB5 + motor;
 
@@ -1916,8 +1886,8 @@ void tastenfunktion(uint16_t Tastenwert)
             tastestruct.aktiv = 1;
             tastestruct.data = Taste;
 
-            // Taste und Tastenwert anzeigen
-            if(OLED)
+            // 
+            if(OLED) // Taste und Tastenwert anzeigen
             {
               oled_delete(0,80,120);
                u8g2.setCursor(0,80);
@@ -1944,11 +1914,8 @@ void tastenfunktion(uint16_t Tastenwert)
             ringbufferstatus = 0;
             cncstatus = 0;
             ladeposition = 0;
-            oled_delete(100,70,40);
-            u8g2.setCursor(100,70);
-            //u8g2.print("C0 ");
-            u8g2.print(Taste);
-            u8g2.sendBuffer();
+
+           
 
             switch (Taste)
             {
@@ -1980,8 +1947,8 @@ void tastenfunktion(uint16_t Tastenwert)
                         joystickbuffer[3] = DOWN; // del Anschlagind oben
 
                         //oled_frame(anschlagstruct.x,anschlagstruct.y,40);                   
-                        oled_delete(anschlagstruct.x,anschlagstruct.y,90);
-                        oled_delete(0,anschlagstruct.y+20,100);
+                        //oled_delete(anschlagstruct.x,anschlagstruct.y,90);
+                        //oled_delete(0,anschlagstruct.y+20,100);
                      }                       
 
                      if (pfeiltastecode == 0)
@@ -2031,9 +1998,9 @@ void tastenfunktion(uint16_t Tastenwert)
                      {
                         joystickbuffer[3] = UP; // del Anschlagind oben
                         //oled_frame(anschlagstruct.x,anschlagstruct.y,50);
-                        oled_delete(anschlagstruct.x,anschlagstruct.y,50);
+                        //oled_delete(anschlagstruct.x,anschlagstruct.y,50);
                         //oled_frame(0,anschlagstruct.y+20,90);
-                        oled_delete(0,anschlagstruct.y+20,100);
+                        //oled_delete(0,anschlagstruct.y+20,100);
                      }                       
                      if (pfeiltastecode == 0)
                      {
@@ -2166,10 +2133,11 @@ void tastenfunktion(uint16_t Tastenwert)
                   if(servopos > 100)
                   {
                      servostatus |= (1<<SERVO_DOWN);
-                     servopos = 100;
-                     servoC.write(servopos);
+                     //servopos = 100; //Schneller lauf
+                     servoC.write(servopos); // sofort stellen
                      digitalWriteFast(MC_EN,LOW);
                   }
+
               
                }break;
 
@@ -2182,16 +2150,12 @@ void tastenfunktion(uint16_t Tastenwert)
                      servoC.write(servopos);
                      digitalWriteFast(MC_EN,LOW);
                   }
-                  // Serial.printf("Taste 1\n");
-                  //motor_C.setTargetAbs(800);
-                  //digitalWriteFast(MC_EN,LOW);
-                  //controller.move(motor_C);
+                 
                   
                }break;
 
                case 5:                        // Ebene tiefer
                {
-                  // Serial.printf("Taste 5\n");
                   OSZIA_TOGG();
                   // SPI_out2data(102,16);
                   if (pfeiltastecode == 0)
@@ -2520,16 +2484,7 @@ void home_horizontal(void)
 
    rampstatus |= (1 << RAMPOKBIT);
 
-   //u8g2.print("L");
-   //lage = AbschnittLaden_bres(CNCDaten[pos]);
-   //u8g2.print(lage);
-
-   //u8g2.print("*");
-   //u8g2.print(richtungA);
-   //u8g2.print("*");
-   //u8g2.print(errA);
-   //u8g2.print("*");
-   //u8g2.print(bres_counterA);
+   
    
    ringbufferstatus |= (1 << STARTBIT);
   
@@ -2997,7 +2952,7 @@ void setup()
    anschlagstruct.x = ANSCHLAG_X;
    anschlagstruct.y = ANSCHLAG_Y;
    anschlagstruct.aktiv = 0;
-   if (OLED)
+   //if (OLED)
    {
       u8g2.setCursor(0,anschlagstruct.y);
       u8g2.print("Anschlag ");
@@ -3101,24 +3056,17 @@ void loop()
 
       // OLED
       
-         oled_delete(0,100,100);
-         u8g2.setCursor(50,100);
-         u8g2.print("*");
-         
-         u8g2.print(bres_counterA);
-         //u8g2.print(" R");
-         u8g2.print("*");
-         //u8g2.sendBuffer();
+      
 
       if (tastestruct.aktiv)
       {
          tastestruct.aktiv = 0;
          u8g2.setCursor(tastestruct.x,tastestruct.y);
          u8g2.print(tastestruct.data);
-         //u8g2.sendBuffer();  
+         u8g2.sendBuffer();  
       }
       
-      if (anschlagstruct.aktiv == 1)
+      if ((anschlagstruct.aktiv == 1) && OLED)
       {
          anschlagstruct.aktiv = 0;
          oled_delete(0,100,100);
@@ -3348,12 +3296,13 @@ void loop()
      
       //ADC_Wert0 = 1;//analogRead(A1); // CNC: A0 besetzt
       //ADC_Wert1 = 2;//analogRead(A1)/2;
+
       if(SERVO)
       {
-         if((servostatus & (1<<SERVO_DOWN)) && ((servotakt % SERVO_DIV) == 0))
+         if((servostatus & (1<<SERVO_DOWN)) && ((servotakt % (SERVO_DIV)) == 0))
          {
             
-            if(servopos > (SERVO_MIN + SERVO_SCHRITT))
+            if(servopos >= (SERVO_MIN + SERVO_SCHRITT))
             {
                      servopos -= SERVO_SCHRITT;
 
@@ -3362,8 +3311,8 @@ void loop()
             else
             {
                      servostatus &=  ~(1<<SERVO_DOWN);
-                     servopos = SERVO_MIN;
-                     //digitalWriteFast(MC_EN, HIGH);
+                     
+                     digitalWriteFast(MC_EN, HIGH);
 
             }
          }
@@ -3754,10 +3703,7 @@ void loop()
          ////#pragma mark C0 Pfeiltaste (von AV manFeldRichtung)
          case 0xC0: // mousedown
          {
-            oled_delete(100,70,20);
-            u8g2.setCursor(100,70);
-            u8g2.print("C0");
-            u8g2.sendBuffer();
+            
             sendbuffer[24] = buffer[32];
 
             // Abschnittnummer bestimmen
@@ -3770,9 +3716,6 @@ void loop()
             sendbuffer[0] = 0xC2;
             uint8_t lage = buffer[25];
             pfeiltastenrichtung = buffer[29];
-            // // Serial.printf("\n****************************************\n");
-            // // Serial.printf("C0 Abschnitt lage: %d abschnittnummer: %d richtung: %d\n",lage,abschnittnummer, richtung);
-            // // Serial.printf("****************************************\n");
             
             ladeposition = 0;
             endposition = 0xFFFF;
@@ -4195,16 +4138,7 @@ void loop()
             // 0: innerer Abschnitt
 
             // OSZIA_LO();
-            //             // Serial.printf("\n\ndefault abschnittnummer: %d  lage: %d code: %d\n",abschnittnummer,lage,code); // 50 us
-            //             for(int i=0;i<33;i++)
-            {
-               //              // Serial.printf("%d\t",buffer[i]);
-            }
-            //           // Serial.printf("\n");
-
-            // // Serial.printf("\n****************************************\n");
-            // // Serial.printf("default Abschnitt lage: %d abschnittnummer: %d\n",lage,abschnittnummer);
-            // // Serial.printf("****************************************\n");
+           
 
             //  usb_rawhid_send((void*)sendbuffer, 0); // nicht jedes Paket melden
 
@@ -4222,9 +4156,6 @@ void loop()
                motorstatus = 0;
                ringbufferstatus = 0x00;
                anschlagstatus = 0;
-               //u8g2.setCursor(10,90);
-               //u8g2.print("AAA");
-               //u8g2.sendBuffer();
                ringbufferstatus |= (1 << FIRSTBIT);
                AbschnittCounter = 0;
                
@@ -4331,7 +4262,6 @@ void loop()
    {
                
 
-      //     // Serial.printf("\n\n                 Abschnitt 0 laden ringbufferstatus: %d\n",ringbufferstatus);
       ringbufferstatus &= ~(1 << STARTBIT); // Startbit entfernen
       ladeposition = 0;                     // laufender Zaehler fuer Ringbuffer, gefiltert mit Ringbuffertiefe
       AbschnittCounter = 0;
@@ -4341,10 +4271,7 @@ void loop()
       uint8_t l = sizeof(CNCDaten[ladeposition]);
       uint8_t micro = CNCDaten[ladeposition][26];
 
-      ////#pragma mark default Ersten Abschnitt laden
-
-    
-          
+             
       uint8_t lage = AbschnittLaden_bres(CNCDaten[ladeposition]); // erster Wert im Ringbuffer
       
       // Gradient
@@ -4367,7 +4294,6 @@ void loop()
        ladeposition++;
       if (lage == 2) // nur ein Abschnitt
       {
-         // // Serial.printf("Abschnitt 0 laden nur 1 Abschnitt cncstatus: %d\n", cncstatus);
          ringbufferstatus |= (1 << ENDBIT); // unbenutzt
          ringbufferstatus |= (1 << LASTBIT);
       }
@@ -4375,10 +4301,7 @@ void loop()
 
       interrupts();
 
-      //      startTimer2();
-      //      // // Serial.printf("motorstatus: %d\n",motorstatus);
-      // Serial.printf("+++   +++   +++    Erster Abschnitt end\n");
-      //u8g2.print("end");
+         
       
    } // 1 << STARTBIT: Ersten Abschnitt laden
 
@@ -4400,9 +4323,7 @@ void loop()
    // * Motor A,B *
    // **************************************
    //noInterrupts();
-   //u8g2.print("MA");
-   //u8g2.sendBuffer();
-   
+
 
    if (deltafastdirectionA > 0) // Bewegung auf Seite A vorhanden
    {
@@ -4411,8 +4332,7 @@ void loop()
       if ((bres_counterA > 0) && (bres_delayA == 0) && ((!(anschlagstatus & (1 << END_A0))) && (!(anschlagstatus & (1 << END_B0)))))
       {
          // start ramp
-         //u8g2.print("MA");
-         //u8g2.print(bres_counterA);
+ 
          if (rampstatus & (1 << RAMPSTARTBIT))
          {
             if (ramptimerintervall > timerintervall_FAST) // noch nicht auf max speed
