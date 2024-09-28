@@ -144,7 +144,7 @@ const int chipSelect = 14;
 uint8_t loopLED;
 #define USB_DATENBREITE 64
 
-#define TEST 1
+#define TEST 0
 
 int8_t r;
 
@@ -1039,10 +1039,10 @@ void AnschlagVonEndPin(const uint8_t endpin)
            
       anschlagstruct.richtung = richtung;
       //u8g2.setCursor(60,120);
+      uint8_t anschlagsend = 0;
       //u8g2.print("PIN");
       if ((digitalRead(END_A0_PIN) == 0) && (richtungA & (1<<RICHTUNG_A))) // Anschlag an A0 OK
       {
-       
          if(OLED)
          {
             oled_delete(0,anschlagstruct.y,120);
@@ -1061,6 +1061,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          anschlagstruct.aktiv = 1;
          richtungA = 0;
          
+         anschlagsend = 1;
          if(cncstatus & (1 << GO_HOME))
          {
             oled_delete(0,anschlagstruct.y,120);
@@ -1086,30 +1087,34 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltaslowdirectionA = 0;
          anschlagstruct.data = RICHTUNG_C;
          anschlagstruct.aktiv = 1;
+         anschlagsend = 1;
       }
 
-        if (((digitalRead(END_B0_PIN) == 0) && (richtungB & (1<<RICHTUNG_B))))// Anschlag an B0 OK
+      if (((digitalRead(END_B0_PIN) == 0) && (richtungB & (1<<RICHTUNG_B))))// Anschlag an B0 OK
       {
          if(OLED)
          {
+            oled_delete(0,anschlagstruct.y,120);
             u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"B0");
           
          }
             //u8g2.print("B0");
-            //Motor  stoppen
+            //Motor B  stoppen
+            digitalWriteFast(MB_EN,HIGH);
             deltafastdirectionB = 0;
             deltafastdelayB = 0;
             deltaslowdirectionB = 0;
             bres_counterA = 0;
             bres_delayA = 0;
-
-
-
-            anschlagstruct.data = RICHTUNG_B;
-            digitalWriteFast(MA_EN, HIGH);
-            digitalWriteFast(MB_EN,HIGH);
-            anschlagstruct.aktiv = 1;
             richtungB = 0;
+
+            anschlagsend = 1;
+            anschlagstruct.data = RICHTUNG_B;
+          //  digitalWriteFast(MA_EN, HIGH);
+          //  
+            anschlagstruct.aktiv = 1;
+            
+
          if(cncstatus & (1 << GO_HOME))
          {
             digitalWriteFast(MA_EN,HIGH);
@@ -1140,7 +1145,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
 
       }
 
-        if ((digitalRead(END_B1_PIN) == 0) && (richtungB & (1<<RICHTUNG_D)))// Anschlag an B1
+      if ((digitalRead(END_B1_PIN) == 0) && (richtungB & (1<<RICHTUNG_D)))// Anschlag an B1
       {
          if(OLED)
          {
@@ -1161,9 +1166,25 @@ void AnschlagVonEndPin(const uint8_t endpin)
          richtungB = 0;
          digitalWriteFast(MB_EN,HIGH);
          anschlagstruct.aktiv = 1;
+         anschlagsend = 1;
       }
 
+      if (anschlagsend)
+      {
+          sendbuffer[5] = (abschnittnummer & 0xFF00) >> 8;
+         
+         sendbuffer[6] = abschnittnummer & 0x00FF;
 
+         sendbuffer[7] = (ladeposition & 0xFF00) >> 8;
+         sendbuffer[8] = ladeposition & 0x00FF;
+
+         //
+         sendbuffer[22] = cncstatus;
+
+         sendbuffer[9] += 11;
+
+         uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
+      }
    
       //u8g2.sendBuffer();
 
@@ -1574,7 +1595,6 @@ uint16_t readTastatur(void)
    uint16_t adctastenwert = adc->adc0->analogRead(TASTATURPIN);
    if (adctastenwert > 10)
    {
-      //// Serial.printf("readTastatur adctastenwert: %d\n",adctastenwert);
       return adctastenwert;
    }
    return 0;
@@ -1840,7 +1860,7 @@ void haltfunktion(void)
             
             digitalWriteFast(MA_STEP, HIGH);
             digitalWriteFast(MB_STEP, HIGH);
-            digitalWriteFast(MC_STEP, HIGH);
+            //digitalWriteFast(MC_STEP, HIGH);
 
 }
 
@@ -1850,7 +1870,7 @@ void tastenfunktion(uint16_t Tastenwert)
    if (Tastenwert>10) // ca Minimalwert der Matrix
    {      
         tastaturcounter++;       
-      if (tastaturcounter>=40)   //   Prellen
+      if (tastaturcounter>=50)   //   Prellen
       {        
          tastaturcounter=0x00;
          if (analogtastaturstatus & (1<<TASTE_ON)) // Taste schon gedrueckt
@@ -1861,7 +1881,7 @@ void tastenfunktion(uint16_t Tastenwert)
          else // Taste neu gedrückt
          {
             uint8_t t = Tastenwert & 0xFF;
-
+            Taste = 0;
             analogtastaturstatus |= (1<<TASTE_ON); // nur einmal
             if(Tastenwert > 250)
             {
@@ -1897,7 +1917,6 @@ void tastenfunktion(uint16_t Tastenwert)
                u8g2.print(" "); 
             }
 
-            // Serial.printf("Tastenwert: %d Taste: %d \n",Taste,Tastenwert);
             tastaturcounter=0;
             Tastenwert=0x00;
             pfeiltastecode = 0;
@@ -1921,24 +1940,26 @@ void tastenfunktion(uint16_t Tastenwert)
             {
                case 0://
                { 
-                  // Serial.printf("Taste 0\n");
                   break;
                   // Blinken auf C2
                   
-               }
-                  break;
+               }break;
                   
                case 8: // up      weg vom Motor                       //  
                {
-                  
+                     u8g2.setCursor(0,80);
+                     u8g2.print("T81");
+                     //u8g2.sendBuffer();
                   if (digitalRead(END_B1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B1
                   {
                      cncstatus = 0;
                      ladeposition = 0;
-                     if(OLED)
+                     ringbufferstatus = 0;
+                     //if(OLED)
                      {
                         u8g2.setCursor(0,120);
-                        u8g2.print("T8 ");
+                        u8g2.print("T82");
+                        u8g2.sendBuffer();
                      }
                      
                      joystickbuffer[0] = 0x80 + UP;
@@ -1957,6 +1978,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         pfeiltastecode = UP;
                         pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
                         endimpulsdauer = TASTENENDIMPULSDAUER;
+                        
                         tastaturstep = MB_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
 
                         digitalWriteFast(MB_EN,LOW);
@@ -2009,6 +2031,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         endimpulsdauer = TASTENENDIMPULSDAUER;
                         pfeilrampcounter = 0;
                         tastaturstep = MB_STEP;
+
                         digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,LOW);
                         richtung = (1<<RICHTUNG_B);
@@ -2148,7 +2171,7 @@ void tastenfunktion(uint16_t Tastenwert)
                      servostatus |= SERVO_UP;
                      servopos = 200;
                      servoC.write(servopos);
-                     digitalWriteFast(MC_EN,LOW);
+                     //digitalWriteFast(MC_EN,LOW);
                   }
                  
                   
@@ -2171,6 +2194,13 @@ void tastenfunktion(uint16_t Tastenwert)
 
                   if(analogtastaturstatus & (1<<JOYSTIICK_ON))
                   {
+                     if(joystickdelaycounter < 200)
+                     {
+                        //joystickdelaycounter++;
+                        //break;
+                     }
+                     
+                     
                      oled_delete(0,80,120);
                      analogtastaturstatus &= ~(1<<JOYSTIICK_ON); // OFF
                      joysticktimerA.end();
@@ -2190,9 +2220,10 @@ void tastenfunktion(uint16_t Tastenwert)
                   }
                   else 
                   {
-                     OSZIA_LO();
+                     //OSZIA_LO();
                      oled_delete(0,80,80);
                      analogtastaturstatus |= (1<<JOYSTIICK_ON); // ON
+                     joystickdelaycounter = 0;
                      joysticktimerA.begin(joysticktimerAFunktion,JOYSTICKSTARTIMPULS);
                      joysticktimerB.begin(joysticktimerBFunktion,JOYSTICKSTARTIMPULS);
                      spijoystickdata |= (1<<7); // an lcd schicken
@@ -2253,7 +2284,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         oled_delete(0,80,80);
                         u8g2.setCursor(70, JOYSTICK_Y);
                         u8g2.print(F("calib"));
-                        u8g2.drawFrame(CALIB_X,CALIB_Y,CALIB_W,CALIB_H);
+                        u8g2.drawFrame(CALIB_X,CALIB_Y,CALIB_W,CALIB_H);// Frame zeichnen
                         u8g2.sendBuffer();
 
                         spijoystickdata |= (1<<6);
@@ -2269,11 +2300,11 @@ void tastenfunktion(uint16_t Tastenwert)
                         joystickbuffer[56] = (calibminA & 0xFF00)>>8; 
                         joystickbuffer[57] = calibminA & 0x00FF;
                         
-                         calibmaxB  = potmitteB;
+                         calibmaxB  = potmitteA;
                         joystickbuffer[42] = (calibmaxB & 0xFF00)>>8; 
                         joystickbuffer[43] = calibmaxB & 0x00FF;
                       
-                        calibminB = potmitteB;
+                        calibminB = potmitteA;
                         joystickbuffer[46] = (calibminB & 0xFF00)>>8; 
                         joystickbuffer[47] = calibminB & 0x00FF;
 
@@ -2379,7 +2410,7 @@ void tastenfunktion(uint16_t Tastenwert)
             }
             
          }
-         OSZIA_HI(); 
+         //OSZIA_HI(); 
          
       }
      
@@ -2403,10 +2434,10 @@ void tastenfunktion(uint16_t Tastenwert)
          analogtastaturstatus &= ~(1<<TASTE_ON);
 
          // Tastennummer weg
-         u8g2.setDrawColor(0);
-         oled_delete(tastestruct.x,tastestruct.y,uint8_t(10));
-         u8g2.setDrawColor(1);
-         u8g2.sendBuffer();
+         //u8g2.setDrawColor(0);
+         oled_delete(tastestruct.x,tastestruct.y,uint8_t(30));
+         //u8g2.setDrawColor(1);
+         //u8g2.sendBuffer();
       }
    }
 }
@@ -2652,7 +2683,7 @@ void stopTask(uint8_t emergency) // reset
    
    digitalWriteFast(MA_STEP,HIGH);
    digitalWriteFast(MB_STEP,HIGH);
-   digitalWriteFast(MC_STEP,HIGH);
+   //digitalWriteFast(MC_STEP,HIGH);
    
   
    
@@ -2742,6 +2773,7 @@ void setup()
    digitalWriteFast(MB_RI, HIGH);   // HI
    digitalWriteFast(MB_EN, HIGH);   // HI
 
+/*
    // Stepper C
    pinMode(MC_STEP, OUTPUT); // HI
    pinMode(MC_RI, OUTPUT);   // HI
@@ -2750,7 +2782,7 @@ void setup()
    digitalWriteFast(MC_STEP, HIGH); // HI
    digitalWriteFast(MC_RI, HIGH);   // HI
    digitalWriteFast(MC_EN, HIGH);   // HI
-
+*/
    // Stepper D
 
    //pinMode(MD_STEP, OUTPUT); // HI
@@ -2866,9 +2898,11 @@ void setup()
    //potminA = 330;
    //potmaxA = 700;
    calibminA = potmitteA;
+   //calibminA = 0;
    calibmaxA = potmitteA;
 
    calibminB = potmitteB;
+   //calibminB = 0;
    calibmaxB = potmitteB;
 
    // SPI
@@ -2906,11 +2940,11 @@ void setup()
    out_data[0] = 0xFF;
    uint8_t eepromaddress = EEPROMCALIB;
    //SPI_out2data(103,EEPROM.read(eepromaddress+1));
-   calibminA = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
-   calibmaxA = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
+ //  calibminA = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
+ //  calibmaxA = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
 
-   calibminB = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
-   calibmaxB = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
+ //  calibminB = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
+ //  calibmaxB = (EEPROM.read(eepromaddress++) << 8) |  EEPROM.read(eepromaddress++);
    u8g2.clearBuffer();  
    u8g2.setFontMode(1);
    // 
@@ -3061,6 +3095,7 @@ void loop()
       if (tastestruct.aktiv)
       {
          tastestruct.aktiv = 0;
+         oled_delete(tastestruct.x,tastestruct.y,40);
          u8g2.setCursor(tastestruct.x,tastestruct.y);
          u8g2.print(tastestruct.data);
          u8g2.sendBuffer();  
@@ -3181,8 +3216,10 @@ void loop()
                   u8g2.setCursor(80,CALIB_Y+2*charh);
                   u8g2.print(calibminB);
                }
-
-               u8g2.sendBuffer();
+               if(transferindex % 4 == 0)
+               {
+                  u8g2.sendBuffer();
+               }
             }
 
 
@@ -3231,8 +3268,11 @@ void loop()
             joystickbuffer[61] = aaa & 0x00FF;
 
 
-
-            uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
+         if(transferindex % 4 == 0)
+         {
+             // uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 0);
+         }
+          
 
          } // analogtastaturstatus & (1<<JOYSTIICK_ON)
 
@@ -3284,10 +3324,6 @@ void loop()
 
 
 
-
-
-
-
    } // sincelastjoystickdata > 500
 
    if (sincelaststep > 0x7FF) // micros
@@ -3331,13 +3367,13 @@ void loop()
                ringbufferindexMaxA++;
             }
             
-             if(potwertA < potmitteA) // insert in Ringbuffer
+             if(potwertA <= potmitteA) // insert in Ringbuffer
             {
                ringbufferarrayminA[ringbufferindexMinA%4] = potwertA;
                ringbufferindexMinA++;
             }
          }
-         else
+         else // odd
          {
             potwertB = readJoystick(POTB_PIN);
 
@@ -3347,7 +3383,7 @@ void loop()
                ringbufferindexMaxB++;
             }
             
-             if(potwertB < potmitteB) // insert in Ringbuffer
+             if(potwertB <= potmitteB) // insert in Ringbuffer
             {
                ringbufferarrayminB[ringbufferindexMinB%4] = potwertB;
                ringbufferindexMinB++;
@@ -4374,6 +4410,7 @@ void loop()
          {
             // // Serial.printf("bres_counterA: %d xA: %d yA: %d\n",bres_counterA, xA, yA);
          }
+
          if (errA < 0)
          {
             // Fehlerterm wieder positiv (>=0) machen
@@ -4469,17 +4506,14 @@ void loop()
                cncstatus = 0;
 
                digitalWriteFast(MA_EN, HIGH);
+               digitalWriteFast(MB_EN, HIGH);
+
+               //digitalWriteFast(MA_STEP, HIGH);
+               //digitalWriteFast(MB_STEP, HIGH);
 
                taskstatus &= ~(1<<TASK);
                
                
-               /*
-               for (uint16_t i=0;i<255;i++)
-               {
-
-                  // // Serial.printf("%d\t%d \n",i,errarray[i]);
-               }
-               */
                //      sei();
             }
             else

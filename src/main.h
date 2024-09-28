@@ -130,3 +130,5 @@ volatile uint32_t rampendstep = 0; // Beginn der Endramp. Wird in Abschnittladen
 
 uint8_t richtungstatus = 0;
 uint8_t oldrichtungstatus = 0;
+
+volatile uint8_t joystickdelaycounter = 0;
