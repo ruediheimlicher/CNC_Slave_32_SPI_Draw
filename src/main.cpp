@@ -11,31 +11,8 @@
 /// @author      Ruedi Heimlicher
 /// @author      Ruedi Heimlicher
 /// @date      06.05.2020 21:02
-/// @version   n
 ///
-/// @copyright   (c) Ruedi Heimlicher, 2020
-/// @copyright   GNU General Public Licence
-///
-/// @see      ReadMe.txt for references
-///
-
-///
-/// @file      Stepper32.ino
-/// @brief      Main sketch
-///
-/// @details   <#details#>
-/// @n @a      Developed with [embedXcode+](https://embedXcode.weebly.com)
-///
-/// @author      Ruedi Heimlicher
-/// @author      Ruedi Heimlicher
-/// @date      06.05.2020 21:02
-/// @version   <#version#>
-///
-/// @copyright   (c) Ruedi Heimlicher, 2020
-/// @copyright   GNU General Public Licence
-///
-/// @see      ReadMe.txt for references
-/// @n
+/// 
 ///
 
 
@@ -456,6 +433,12 @@ void SPI_out2data(uint8_t data0,uint8_t data1)
    SPI.endTransaction();
 
 }
+long max(long a, long b)
+{
+   return (((a) > (b)) ? (a) : (b));
+   
+}
+
 
 
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
@@ -959,6 +942,8 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
       errpos = 0;
       ramptimerintervall += (ramptimerintervall / 4 * 3);
       delayTimer.update(ramptimerintervall);
+   
+   
    }
 
    xA = StepCounterA; //
@@ -4393,6 +4378,12 @@ void loop()
                rampstatus &= ~(1 << RAMPOKBIT);
             }
          } //  RAMPSTARTBIT
+
+         if (rampstatus & (1 << RAMPENDBIT))
+         {
+
+
+         } // RAMPENDBIT
 
          
 
