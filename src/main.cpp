@@ -691,7 +691,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    if (AbschnittDaten[35] == 1)
    {
       // // Serial.printf("+++ +++ +++ \t\t\t index: %d AbschnittLaden_bres WENDEPUNKT \n",index);
-         //  rampstatus |=(1<<RAMPOKBIT);
+     rampstatus |=(1<<RAMPOKBIT);
    }
 
    // pwm-rate
@@ -3013,6 +3013,12 @@ void loop()
       //   startminH = (potminA & 0xFF00)>>8;
       //   startminL = potminA & 0x00FF;
       //OSZIA_TOGG();
+      u8g2.setCursor(0,100);
+      u8g2.print("ramp:*");
+      u8g2.print(rampstatus);
+      u8g2.print("*");
+      u8g2.sendBuffer();
+
        if(analogtastaturstatus & (1<<JOYSTIICK_ON))
        {
          //OSZIA_LO();
@@ -3075,7 +3081,8 @@ void loop()
 
       // OLED
       
-      
+     
+
 
       if (tastestruct.aktiv)
       {
