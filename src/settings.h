@@ -60,7 +60,7 @@
 //#define TASTE1            1
 
 
-#define STEPDUR 250
+#define STEPDUR             150
 
 #define STARTDELAYBIT       0
 #define HICOUNTBIT          1
@@ -146,12 +146,13 @@
 
 #define THREAD_COUNT_BIT   0
 
-#define TIMERINTERVALL 196
+#define TIMERINTERVALL 160
+//#define TIMERINTERVALL 168//
 
 // Ramp
 #define RAMP_OK      1 // Ramp einschalten
 #define RAMPFAKTOR   2 // Verlaengerung der delayzeit
-#define RAMPZEIT     800 // Mindestdauer fuer Ramp
+//#define RAMPZEIT     800 // Mindestdauer fuer Ramp
 
 #define RAMPSTARTBIT 1
 #define RAMPENDBIT 2

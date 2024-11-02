@@ -69,6 +69,7 @@ volatile uint16_t deltafastdelayD = 0; // aktueller delay
 volatile uint16_t bres_delayD = 0;     // steps fuer fastdirection
 volatile uint16_t bres_counterD = 0;   // zaehler fuer fastdirection
 
+volatile uint16_t bres_abschnittmitte = 0; 
 
 volatile uint8_t timerstatus = 0;
 
@@ -110,18 +111,19 @@ volatile uint8_t parallelcounter = 0;
 volatile uint8_t parallelstatus = 0; // Status des Thread
 
 volatile uint16_t timerintervall = TIMERINTERVALL;
-volatile uint16_t timerintervall_SLOW = 0; // Intervall klein
-volatile uint16_t timerintervall_FAST = 0; // Intervall gross
+//volatile uint16_t timerintervall_SLOW = 0; // Intervall klein
+volatile uint16_t timerintervall_FAST = 0; // Intervall gross 
 
 // Ramp
 
 volatile uint16_t ramptimerintervall = TIMERINTERVALL;
+volatile uint16_t rampminimum = 20;
 
 volatile uint8_t rampstatus = 0;
 // volatile uint8_t           RampZeit = RAMPZEIT;
-// volatile uint8_t           RampFaktor = RAMPFAKTOR;
+volatile uint8_t           RampFaktor = RAMPFAKTOR;
 volatile uint32_t rampstepstart = 0; // Stepcounter am Anfang
-// volatile uint32_t          ramptimercounter=0;  // laufender counter  fuer Rampanpassung
+volatile uint32_t          ramptimercounter=0;  // laufender counter  fuer Rampanpassung
 // volatile uint32_t          //ramptimerdelay = 100;  // Takt fuer Rampanpassung
 uint8_t rampschritt = 2;
 volatile uint16_t rampbreite = 10; // anzahl Schritte der Ramp. Wird beim Start bestimmt und fuer das Ende verwendet

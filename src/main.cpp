@@ -156,6 +156,10 @@ volatile uint8_t inbuffer[USB_DATENBREITE] = {};
 volatile uint8_t outbuffer[USB_DATENBREITE] = {};
 volatile uint16_t usb_recv_counter = 0;
 volatile uint16_t cnc_recv_counter = 0;
+
+volatile uint16_t usb_timerintervall = TIMERINTERVALL;
+volatile uint8_t usb_rampfaktor = 0;
+
 // end USB
 
 elapsedMillis sinceblink;
@@ -637,6 +641,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    //  lcd_puts("    ");
 
    uint8_t returnwert = 0;
+   timerintervall = TIMERINTERVALL;
    
    /*
     Reihenfolge der Daten:
@@ -934,22 +939,36 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    // aktuelle Werte einsetzen
    bres_delayA = deltafastdelayA;       // aktueller delay in fastdir
    bres_counterA = deltafastdirectionA; // aktueller counter fuer steps
+   bres_abschnittmitte = deltafastdirectionA/2;
+
+   ramptimerintervall = TIMERINTERVALL; 
 
    if (rampstatus & (1 << RAMPOKBIT))
    {
       //// Serial.printf("AbschnittLaden_bres index: %d set RAMPSTARTBIT\n", index);
       rampstatus |= (1 << RAMPSTARTBIT); // Ramp an Start
       errpos = 0;
-      ramptimerintervall += (ramptimerintervall / 4 * 3);
+      //ramptimerintervall += (TIMERINTERVALL / 4 * 4);
+      ramptimerintervall *= RAMPFAKTOR;
       delayTimer.update(ramptimerintervall);
    
    
    }
+   else
+   {
+      delayTimer.update(timerintervall);
+
+   }
+
 
    xA = StepCounterA; //
    yA = StepCounterB;
 
    errA = deltafastdirectionA / 2;
+
+   // RAMP
+   usb_rampfaktor = AbschnittDaten[36];
+   usb_timerintervall = AbschnittDaten[37];
 
    // // Serial.printf("AbschnittLaden_bres deltafastdirectionA: %d deltaslowdirectionA: %d  deltafastdelayA: %d errA: %d bres_counterA: %d bres_delayA: %d\n",deltafastdirectionA,deltaslowdirectionA, deltafastdelayA,errA,bres_counterA,bres_delayA);
 
@@ -989,25 +1008,17 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
    errB = deltafastdirectionB / 2;
    */
-   {
+   
 
-      timerintervall_FAST = TIMERINTERVALL;
+   timerintervall_FAST = TIMERINTERVALL;
       //  OSZIB_LO();
-   }
+   
 
 
    // motorstatus: welcher Motor ist relevant
    motorstatus = AbschnittDaten[21];
 
-   // richtung change
-   ////#pragma mark Richtung change
-
-   // rampstatus |=(1<<RAMPOKBIT);
-
-   // startTimer2();
-
-   // // Serial.printf("\nAbschnittLaden_bres end aktuellelage: %d \n",returnwert);
-   //OSZIA_HI();
+   
    
    tastaturstatus = 0 ;
 
@@ -1981,7 +1992,10 @@ void tastenfunktion(uint16_t Tastenwert)
                         anschlagstruct.aktiv = 1;
                         joystickbuffer[4] = 44;//rand() % 20 + 1;
                         uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
+                        if(senderfolg == 0)
+                        {
 
+                        }
                      }
                      //uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
                   }
@@ -3017,7 +3031,7 @@ void loop()
       u8g2.print("ramp:*");
       u8g2.print(rampstatus);
       u8g2.print("*");
-      u8g2.sendBuffer();
+      //u8g2.sendBuffer();
 
        if(analogtastaturstatus & (1<<JOYSTIICK_ON))
        {
@@ -4434,7 +4448,7 @@ void loop()
             }
             // Impuls A und B starten
             // // Serial.printf("Motor A diagonal\t");
-         }
+         } // errA < 0
          else
          {
             // Schritt in schnelle Richtung, Parallelschritt
@@ -4466,6 +4480,7 @@ void loop()
 
             // // Serial.printf("Motor A parallel\t");
          }
+
          bres_delayA = deltafastdelayA;
          // CounterA zuruecksetzen fuer neuen Impuls
 
