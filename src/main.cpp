@@ -949,9 +949,12 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
       rampstatus |= (1 << RAMPSTARTBIT); // Ramp an Start
       errpos = 0;
       //ramptimerintervall += (TIMERINTERVALL / 4 * 4);
-      ramptimerintervall *= RAMPFAKTOR;
+
+      
+      rampbreite = TIMERINTERVALL * RAMPFAKTOR/RAMPSCHRITT;
+      ramptimerintervall += rampbreite;
+
       delayTimer.update(ramptimerintervall);
-   
    
    }
    else
@@ -969,6 +972,8 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    // RAMP
    usb_rampfaktor = AbschnittDaten[36];
    usb_timerintervall = AbschnittDaten[37];
+
+
 
    // // Serial.printf("AbschnittLaden_bres deltafastdirectionA: %d deltaslowdirectionA: %d  deltafastdelayA: %d errA: %d bres_counterA: %d bres_delayA: %d\n",deltafastdirectionA,deltaslowdirectionA, deltafastdelayA,errA,bres_counterA,bres_delayA);
 
@@ -4374,41 +4379,48 @@ void loop()
       if ((bres_counterA > 0) && (bres_delayA == 0) && ((!(anschlagstatus & (1 << END_A0))) && (!(anschlagstatus & (1 << END_B0)))))
       {
          // start ramp
- 
-         if (rampstatus & (1 << RAMPSTARTBIT))
+         if (rampstatus & (1 << RAMPOKBIT))
          {
-            if (ramptimerintervall > timerintervall_FAST) // noch nicht auf max speed
+            if (rampstatus & (1 << RAMPSTARTBIT))
             {
-                if (rampstatus & (1 << RAMPOKBIT))
+               if (ramptimerintervall >= (timerintervall_FAST + RAMPSCHRITT)) // noch nicht auf max speed
                {
-                  ramptimerintervall -= RAMPSCHRITT;
-                  delayTimer.update(ramptimerintervall);
-                  // rampbreite++;
+                  if (bres_counterA > bres_abschnittmitte)
+                  //if (rampstatus & (1 << RAMPOKBIT))
+                  {
+                     ramptimerintervall -= RAMPSCHRITT; // impuls reduzieren
+                     delayTimer.update(ramptimerintervall);
+                  }
                }
-            }
-            else // max
+               else // max erreicht
+               {
+                  // OSZIB_HI();
+                  // errarray[errpos++] = 1000;
+                  rampstatus &= ~(1 << RAMPSTARTBIT);
+                  rampendstep = rampstepstart - max(StepCounterA, StepCounterB);
+                  rampstatus |= (1 << RAMPENDBIT);
+                  rampstatus |= (1 << RAMPEND0BIT);
+                  
+                  //rampstatus &= ~(1 << RAMPOKBIT);
+               }
+            } //  RAMPSTARTBIT
+
+            if (rampstatus & (1 << RAMPENDBIT))
             {
-               // OSZIB_HI();
-               // errarray[errpos++] = 1000;
-               rampstatus &= ~(1 << RAMPSTARTBIT);
-               rampendstep = rampstepstart - max(StepCounterA, StepCounterB);
-               rampstatus |= (1 << RAMPENDBIT);
-               rampstatus |= (1 << RAMPEND0BIT);
-               // // Serial.printf("end rampstepstart: %d rampendstep: %d ramptimerintervall: %d timerintervall: %d\n",rampstepstart,rampendstep, ramptimerintervall,timerintervall);
-               // // Serial.printf("end ramp\n");
-               rampstatus &= ~(1 << RAMPOKBIT);
-            }
-         } //  RAMPSTARTBIT
+               if(bres_counterA < (rampbreite - RAMPSCHRITT))
+               {
+                  //if (ramptimerintervall <= (rampbreite - RAMPSCHRITT))
+                  {
+                     ramptimerintervall += RAMPSCHRITT; // impuls reduzieren
+                     delayTimer.update(ramptimerintervall);
+                  }
+               }
 
-         if (rampstatus & (1 << RAMPENDBIT))
-         {
+            } // RAMPENDBIT
 
-
-         } // RAMPENDBIT
+         } // end ramp
 
          
-
-         // end ramp
 
          //      noInterrupts();
          //

@@ -116,21 +116,21 @@ volatile uint16_t timerintervall_FAST = 0; // Intervall gross
 
 // Ramp
 
-volatile uint16_t ramptimerintervall = TIMERINTERVALL;
-volatile uint16_t rampminimum = 20;
+volatile uint16_t     ramptimerintervall = TIMERINTERVALL;
+volatile uint16_t     rampminimum = 20;
 
-volatile uint8_t rampstatus = 0;
-// volatile uint8_t           RampZeit = RAMPZEIT;
-volatile uint8_t           RampFaktor = RAMPFAKTOR;
-volatile uint32_t rampstepstart = 0; // Stepcounter am Anfang
-volatile uint32_t          ramptimercounter=0;  // laufender counter  fuer Rampanpassung
+volatile uint8_t      rampstatus = 0;
+// volatile uint8_t       RampZeit = RAMPZEIT;
+volatile uint8_t      RampFaktor = RAMPFAKTOR;
+volatile uint32_t     rampstepstart = 0; // Stepcounter am Anfang
+volatile uint32_t     ramptimercounter=0;  // laufender counter  fuer Rampanpassung
 // volatile uint32_t          //ramptimerdelay = 100;  // Takt fuer Rampanpassung
-uint8_t rampschritt = 2;
-volatile uint16_t rampbreite = 10; // anzahl Schritte der Ramp. Wird beim Start bestimmt und fuer das Ende verwendet
+uint8_t               rampschritt = 4;
+volatile uint16_t     rampbreite = 10; // anzahl Schritte der Ramp. Wird beim Start bestimmt und fuer das Ende verwendet
 
-volatile uint32_t rampendstep = 0; // Beginn der Endramp. Wird in Abschnittladen bestimmt
+volatile uint32_t     rampendstep = 0; // Beginn der Endramp. Wird in Abschnittladen bestimmt
 
-uint8_t richtungstatus = 0;
-uint8_t oldrichtungstatus = 0;
+uint8_t               richtungstatus = 0;
+uint8_t               oldrichtungstatus = 0;
 
-volatile uint8_t joystickdelaycounter = 0;
+volatile uint8_t      joystickdelaycounter = 0;

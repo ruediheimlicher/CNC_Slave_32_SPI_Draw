@@ -146,7 +146,7 @@
 
 #define THREAD_COUNT_BIT   0
 
-#define TIMERINTERVALL 160
+#define TIMERINTERVALL 120
 //#define TIMERINTERVALL 168//
 
 // Ramp
@@ -158,7 +158,9 @@
 #define RAMPENDBIT 2
 #define RAMPEND0BIT 3 // Beginn der Endrampe
 #define RAMPOKBIT    7
-#define RAMPSCHRITT  1
+
+
+#define RAMPSCHRITT  2
 
 
 #define DEVICE_MILL  1
