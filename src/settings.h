@@ -154,13 +154,14 @@
 #define RAMPFAKTOR   2 // Verlaengerung der delayzeit
 //#define RAMPZEIT     800 // Mindestdauer fuer Ramp
 
-#define RAMPSTARTBIT 1
-#define RAMPENDBIT 2
-#define RAMPEND0BIT 3 // Beginn der Endrampe
+#define RAMPSTARTBIT      1
+#define RAMPENDBIT        2 // Beginn der Endrampe
+#define RAMPFIRSTRUNBIT   3 // Beginn Task
+
 #define RAMPOKBIT    7
 
 
-#define RAMPSCHRITT  2
+#define RAMPSCHRITT  1.5
 
 
 #define DEVICE_MILL  1

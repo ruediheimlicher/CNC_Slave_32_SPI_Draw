@@ -947,6 +947,8 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    {
       //// Serial.printf("AbschnittLaden_bres index: %d set RAMPSTARTBIT\n", index);
       rampstatus |= (1 << RAMPSTARTBIT); // Ramp an Start
+
+      rampstatus |= (1 << RAMPFIRSTRUNBIT); // Ramp am Anfang
       errpos = 0;
       //ramptimerintervall += (TIMERINTERVALL / 4 * 4);
 
@@ -1067,6 +1069,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          {
             oled_delete(0,anschlagstruct.y,120);
             u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME");
+            CNCDaten[1][26] = 1;
             AbschnittLaden_bres(CNCDaten[1]);
          }
       }
@@ -4081,8 +4084,6 @@ void loop()
             endposition = abschnittnummer;
 
 
-
-
             cncstatus |= (1 << GO_HOME); // Bit fuer go_home setzen
             //sendbuffer[63] = 1;
             sendbuffer[22] = cncstatus;
@@ -4123,12 +4124,16 @@ void loop()
             CNCDaten[pos+1][19] = 2; // index
 
             CNCDaten[pos+1][22] = 0;
+
+            CNCDaten[pos][26] = 1; // micro
+             CNCDaten[pos+1][26] = 1; // micro
+
             CNCDaten[pos+1][27] = 1;
 
          
 
-         //ampstatus |= (1 << RAMPOKBIT);
-            //ramptimerintervall = TIMERINTERVALL;
+            rampstatus |= (1 << RAMPOKBIT);
+            ramptimerintervall = TIMERINTERVALL;
             startTimer2();
 
             // F0 melden
@@ -4137,6 +4142,42 @@ void loop()
             sei();
          }
          break;
+
+         case 0xF3: // Servo up
+         {
+            
+  
+            if(servopos< 200) // Servo up
+            {
+               servostatus |= SERVO_UP;
+               servopos = 200;
+               servoC.write(servopos);
+               //digitalWriteFast(MC_EN,LOW);
+               sendbuffer[0]=0xF3;
+               sendbuffer[5]=(abschnittnummer & 0xFF00) >> 8;;
+               sendbuffer[6]=abschnittnummer & 0x00FF;
+               
+                uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
+                sendbuffer[0]=0x00;
+            }
+
+         } break;
+
+         case 0xF4: // Servo down
+         {
+            
+            if(servopos > 100)
+            {
+               servostatus |= (1<<SERVO_DOWN);
+               servopos = 100; //Schneller lauf
+               servoC.write(servopos); // sofort stellen
+               digitalWriteFast(MC_EN,LOW);
+               sendbuffer[0]=0xF4;
+                uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
+                sendbuffer[0]=0x00;
+            }
+
+         } break;
 
          case 0xAE: // Joystick save
          {
@@ -4376,13 +4417,16 @@ void loop()
    {
       // // Serial.printf("abschnittnummer: %d richtungstatus: %d\n",abschnittnummer,richtungstatus);
       //  Es hat noch Steps, bres_delayA ist abgezaehlt (bres_delayA bestimmt Impulsabstand fuer Steps)
-      if ((bres_counterA > 0) && (bres_delayA == 0) && ((!(anschlagstatus & (1 << END_A0))) && (!(anschlagstatus & (1 << END_B0)))))
+      
+      
+      if ((bres_counterA > 0) && ((bres_delayA == 0)  ) && ((!(anschlagstatus & (1 << END_A0))) && (!(anschlagstatus & (1 << END_B0)))))
       {
          // start ramp
          if (rampstatus & (1 << RAMPOKBIT))
          {
             if (rampstatus & (1 << RAMPSTARTBIT))
             {
+               rampstatus &= ~(1 << RAMPFIRSTRUNBIT);
                if (ramptimerintervall >= (timerintervall_FAST + RAMPSCHRITT)) // noch nicht auf max speed
                {
                   if (bres_counterA > bres_abschnittmitte)
@@ -4399,7 +4443,7 @@ void loop()
                   rampstatus &= ~(1 << RAMPSTARTBIT);
                   rampendstep = rampstepstart - max(StepCounterA, StepCounterB);
                   rampstatus |= (1 << RAMPENDBIT);
-                  rampstatus |= (1 << RAMPEND0BIT);
+                  //rampstatus |= (1 << RAMPEND0BIT);
                   
                   //rampstatus &= ~(1 << RAMPOKBIT);
                }
@@ -4409,7 +4453,7 @@ void loop()
             {
                if(bres_counterA < (rampbreite - RAMPSCHRITT))
                {
-                  //if (ramptimerintervall <= (rampbreite - RAMPSCHRITT))
+                  
                   {
                      ramptimerintervall += RAMPSCHRITT; // impuls reduzieren
                      delayTimer.update(ramptimerintervall);
