@@ -1068,7 +1068,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          if(cncstatus & (1 << GO_HOME))
          {
             oled_delete(0,anschlagstruct.y,120);
-            u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME");
+            //u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME");
             CNCDaten[1][26] = 1;
             AbschnittLaden_bres(CNCDaten[1]);
          }
@@ -3035,10 +3035,10 @@ void loop()
       //   startminH = (potminA & 0xFF00)>>8;
       //   startminL = potminA & 0x00FF;
       //OSZIA_TOGG();
-      u8g2.setCursor(0,100);
-      u8g2.print("ramp:*");
-      u8g2.print(rampstatus);
-      u8g2.print("*");
+      //u8g2.setCursor(0,100);
+      //u8g2.print("ramp:*");
+      //u8g2.print(rampstatus);
+      //u8g2.print("*");
       //u8g2.sendBuffer();
 
        if(analogtastaturstatus & (1<<JOYSTIICK_ON))

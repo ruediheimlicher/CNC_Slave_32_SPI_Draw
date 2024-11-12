@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "CNC_Slave_32_SPI_LCD",
+			"path": "../../CNC_Slave_32_SPI_LCD"
+		}
+	],
+	"settings": {}
+}
