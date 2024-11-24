@@ -157,8 +157,8 @@ volatile uint8_t outbuffer[USB_DATENBREITE] = {};
 volatile uint16_t usb_recv_counter = 0;
 volatile uint16_t cnc_recv_counter = 0;
 
-volatile uint16_t usb_timerintervall = TIMERINTERVALL;
-volatile uint8_t usb_rampfaktor = 0;
+volatile uint16_t usb_ramptimerintervall = TIMERINTERVALL;
+volatile uint8_t usb_rampfaktor = RAMPFAKTOR;
 
 // end USB
 
@@ -680,6 +680,10 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
     25   steps
     26   micro
 
+    35   ramp
+    36   rampfaktor
+    37   timerintervall
+
     */
    taskstatus |= (1<<TASK);
    taskstatus |= (1<<RUNNING);
@@ -740,7 +744,6 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    dataL = AbschnittDaten[0];
    dataH = AbschnittDaten[1];
    
-   int8_t vz = 1;
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
       richtung |= (1 << RICHTUNG_A); // Rueckwarts LEFT
@@ -748,7 +751,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
       digitalWriteFast(MA_RI, LOW);  // PIN fuer Treiber stellen
       //digitalWriteFast(MA_RI, HIGH);
-      vz = -1;
+      //vz = -1;
       // lcd_putc('r');
    }
    else
@@ -785,13 +788,11 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    dataH = AbschnittDaten[3];
    // lcd_gotoxy(19,1);
 
-   vz = 1;
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
       richtung |= (1 << RICHTUNG_B); // Rueckwarts
       richtungB = (1 << RICHTUNG_B); //** * / Vorwarts RIGHT
       digitalWriteFast(MB_RI, LOW);  // lcd_putc('r');
-      vz = -1;
    }
    else
    {
@@ -941,7 +942,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    bres_counterA = deltafastdirectionA; // aktueller counter fuer steps
    bres_abschnittmitte = deltafastdirectionA/2;
 
-   ramptimerintervall = TIMERINTERVALL; 
+   usb_ramptimerintervall = TIMERINTERVALL; 
 
    if (rampstatus & (1 << RAMPOKBIT))
    {
@@ -950,13 +951,12 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
       rampstatus |= (1 << RAMPFIRSTRUNBIT); // Ramp am Anfang
       errpos = 0;
-      //ramptimerintervall += (TIMERINTERVALL / 4 * 4);
 
       
-      rampbreite = TIMERINTERVALL * RAMPFAKTOR/RAMPSCHRITT;
-      ramptimerintervall += rampbreite;
+      rampbreite = usb_ramptimerintervall * usb_rampfaktor/RAMPSCHRITT;
+      usb_ramptimerintervall += rampbreite;
 
-      delayTimer.update(ramptimerintervall);
+      delayTimer.update(usb_ramptimerintervall);
    
    }
    else
@@ -973,7 +973,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
    // RAMP
    usb_rampfaktor = AbschnittDaten[36];
-   usb_timerintervall = AbschnittDaten[37];
+   usb_ramptimerintervall = AbschnittDaten[37];
 
 
 
@@ -2096,9 +2096,9 @@ void tastenfunktion(uint16_t Tastenwert)
                         anschlagstruct.richtung = richtung;
                         anschlagstruct.aktiv = 1;
                      
-                      joystickbuffer[2] = richtung;
-                     joystickbuffer[4] = 77;//rand() % 20 + 1;
-                     uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
+                       joystickbuffer[2] = richtung;
+                       joystickbuffer[4] = 77;//rand() % 20 + 1;
+                       uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
                      }
                   }
                } break; // case 4
@@ -2520,6 +2520,7 @@ void home_horizontal(void)
    CNCDaten[pos][26] = 1; // micro
    CNCDaten[pos+1][26] = 1; // micro
 
+   //print("home_horizontal CNCDaten: \(CNCDaten)")
    rampstatus |= (1 << RAMPOKBIT);
 
    
@@ -2855,7 +2856,7 @@ void setup()
 
    //// lcd.setCursor(0,0);
    //// lcd.print("hallo");
-   delayTimer.begin(delaytimerfunction, timerintervall);
+   delayTimer.begin(delaytimerfunction, usb_ramptimerintervall);
    delayTimer.priority(0);
 
    //   threads.addThread(thread_func, 1);
@@ -3062,7 +3063,7 @@ void loop()
       //      // lcd.setCursor(0,1);
       //      // lcd.print(String(loopLED));
       
-      //digitalWriteFast(LOOPLED,!(digitalRead(LOOPLED)));
+      digitalWriteFast(LOOPLED,!(digitalRead(LOOPLED)));
       // blink mit MC_EN
       //digitalWriteFast(MC_EN, !(digitalRead(MC_EN)));
 
@@ -4133,7 +4134,7 @@ void loop()
          
 
             rampstatus |= (1 << RAMPOKBIT);
-            ramptimerintervall = TIMERINTERVALL;
+            usb_ramptimerintervall = TIMERINTERVALL;
             startTimer2();
 
             // F0 melden
@@ -4427,13 +4428,13 @@ void loop()
             if (rampstatus & (1 << RAMPSTARTBIT))
             {
                rampstatus &= ~(1 << RAMPFIRSTRUNBIT);
-               if (ramptimerintervall >= (timerintervall_FAST + RAMPSCHRITT)) // noch nicht auf max speed
+               if (usb_ramptimerintervall >= (timerintervall_FAST + RAMPSCHRITT)) // noch nicht auf max speed
                {
                   if (bres_counterA > bres_abschnittmitte)
                   //if (rampstatus & (1 << RAMPOKBIT))
                   {
-                     ramptimerintervall -= RAMPSCHRITT; // impuls reduzieren
-                     delayTimer.update(ramptimerintervall);
+                     usb_ramptimerintervall -= RAMPSCHRITT; // impuls reduzieren
+                     delayTimer.update(usb_ramptimerintervall);
                   }
                }
                else // max erreicht
@@ -4455,8 +4456,8 @@ void loop()
                {
                   
                   {
-                     ramptimerintervall += RAMPSCHRITT; // impuls reduzieren
-                     delayTimer.update(ramptimerintervall);
+                     usb_ramptimerintervall += RAMPSCHRITT; // impuls reduzieren
+                     delayTimer.update(usb_ramptimerintervall);
                   }
                }
 

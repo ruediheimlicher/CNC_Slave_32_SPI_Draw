@@ -116,12 +116,12 @@ volatile uint16_t timerintervall_FAST = 0; // Intervall gross
 
 // Ramp
 
-volatile uint16_t     ramptimerintervall = TIMERINTERVALL;
+//volatile uint16_t     ramptimerintervall = TIMERINTERVALL;
+
 volatile uint16_t     rampminimum = 20;
 
 volatile uint8_t      rampstatus = 0;
 // volatile uint8_t       RampZeit = RAMPZEIT;
-volatile uint8_t      RampFaktor = RAMPFAKTOR;
 volatile uint32_t     rampstepstart = 0; // Stepcounter am Anfang
 volatile uint32_t     ramptimercounter=0;  // laufender counter  fuer Rampanpassung
 // volatile uint32_t          //ramptimerdelay = 100;  // Takt fuer Rampanpassung

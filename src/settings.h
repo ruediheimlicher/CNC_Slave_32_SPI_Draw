@@ -9,7 +9,7 @@
 #ifndef settings_h
 #define settings_h
 
-#define LOOPLED 14
+#define LOOPLED 18
 #define TIMER0_STARTWERT   0x40
 
 #define JOYSTICK 0
@@ -151,7 +151,7 @@
 
 // Ramp
 #define RAMP_OK      1 // Ramp einschalten
-#define RAMPFAKTOR   2 // Verlaengerung der delayzeit
+#define RAMPFAKTOR   3 // Verlaengerung der delayzeit
 //#define RAMPZEIT     800 // Mindestdauer fuer Ramp
 
 #define RAMPSTARTBIT      1
@@ -161,7 +161,7 @@
 #define RAMPOKBIT    7
 
 
-#define RAMPSCHRITT  1.5
+#define RAMPSCHRITT  2
 
 
 #define DEVICE_MILL  1
