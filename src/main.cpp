@@ -1055,8 +1055,13 @@ void AnschlagVonEndPin(const uint8_t endpin)
       {
          if(OLED)
          {
-            oled_delete(0,anschlagstruct.y,120);
-            u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0 ");
+             oled_delete(anschlagstruct.x,anschlagstruct.y,(128 - anschlagstruct.x));
+            u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0");
+            u8g2.setCursor(anschlagstruct.x+22,anschlagstruct.y); 
+            u8g2.print("*");
+            u8g2.print(richtungB);
+            u8g2.print("*");
+
          }       
          //u8g2.print("A0");
          sendbuffer[0] = 0xA5 ;
@@ -1083,8 +1088,12 @@ void AnschlagVonEndPin(const uint8_t endpin)
       {
          if(OLED)
          {
-         oled_delete(0,anschlagstruct.y,120);
-         u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A1");
+            oled_delete(anschlagstruct.x,anschlagstruct.y,(128 - anschlagstruct.x));
+            u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A1");
+            u8g2.setCursor(anschlagstruct.x+22,anschlagstruct.y); 
+            u8g2.print("*");
+            u8g2.print(richtungB);
+            u8g2.print("*");
          
          }
          //u8g2.print("A1");
@@ -1100,12 +1109,16 @@ void AnschlagVonEndPin(const uint8_t endpin)
          richtungA &= ~(1<<RICHTUNG_C);
       }
 
-      if (((digitalRead(END_B0_PIN) == 0) && (richtungB & (1<<RICHTUNG_B))))// Anschlag an B0 OK
+      if (((digitalRead(END_B0_PIN) == 0) && (richtungB & (1<<RICHTUNG_D))))// Anschlag an B0 OK
       {
          if(OLED)
          {
-            oled_delete(0,anschlagstruct.y,120);
+           oled_delete(anschlagstruct.x,anschlagstruct.y,(128 - anschlagstruct.x));
             u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"B0");
+            u8g2.setCursor(anschlagstruct.x+22,anschlagstruct.y); 
+            u8g2.print("*");
+            u8g2.print(richtungB);
+            u8g2.print("*");
           
          }
             //u8g2.print("B0");
@@ -1116,11 +1129,11 @@ void AnschlagVonEndPin(const uint8_t endpin)
             deltaslowdirectionB = 0;
             bres_counterA = 0;
             bres_delayA = 0;
-            richtungB &= ~(1<<RICHTUNG_B);
+            richtungB &= ~(1<<RICHTUNG_D);
 
             anschlagsend = 1;
             anschlagstruct.data = RICHTUNG_B;
-            sendbuffer[0] = 0xA5 + 2;
+            sendbuffer[0] = 0xA5 + 2; // 0xA7
           //  digitalWriteFast(MA_EN, HIGH);
           //  
             anschlagstruct.aktiv = 1;
@@ -1157,13 +1170,13 @@ void AnschlagVonEndPin(const uint8_t endpin)
 
       }
 
-      if ((digitalRead(END_B1_PIN) == 0) && (richtungB & (1<<RICHTUNG_D)))// Anschlag an B1
+      if ((digitalRead(END_B1_PIN) == 0) && (richtungB & (1<<RICHTUNG_B)))// Anschlag an B1
       {
          if(OLED)
          {
             oled_delete(anschlagstruct.x,anschlagstruct.y,(128 - anschlagstruct.x));
             u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"B1");
-            u8g2.setCursor(anschlagstruct.x+20,anschlagstruct.y);
+            u8g2.setCursor(anschlagstruct.x+22,anschlagstruct.y); 
             u8g2.print("*");
             u8g2.print(richtungB);
             u8g2.print("*");
@@ -1174,12 +1187,12 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltafastdirectionB = 0;
          deltafastdelayB = 0;
          deltaslowdirectionB = 0;
-         anschlagstruct.data = RICHTUNG_D;
+         anschlagstruct.data = RICHTUNG_B;
          digitalWriteFast(MB_EN,HIGH);
          anschlagstruct.aktiv = 1;
          anschlagsend = 1;
-         sendbuffer[0] = 0xA5 + 3;
-         richtungB &= ~(1<<RICHTUNG_D);
+         sendbuffer[0] = 0xA5 + 3; // 0xA8
+         richtungB &= ~(1<<RICHTUNG_B);
       }
 
 
@@ -1965,25 +1978,25 @@ void tastenfunktion(uint16_t Tastenwert)
                   
                }break;
                   
-               case 2: // up      weg vom Motor                       //  
+               case 2: // up      zum  Motor                       //  
                {
                      u8g2.setCursor(0,80);
-                     u8g2.print("T81");
+                     u8g2.print("T2 ");
                      //u8g2.sendBuffer();
-                  if (digitalRead(END_B1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B1
+                  if (digitalRead(END_B0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B0
                   {
                      cncstatus = 0;
                      ladeposition = 0;
                      ringbufferstatus = 0;
-                     //if(OLED)
+                     if(OLED)
                      {
                         u8g2.setCursor(0,120);
-                        u8g2.print("T82");
+                        u8g2.print("T2 ");
                         u8g2.sendBuffer();
                      }
                      
                      joystickbuffer[0] = 0x80 + UP;
-                     if (digitalRead(END_B0_PIN)==0)
+                     if (digitalRead(END_B1_PIN)==0)
                      {
                         joystickbuffer[3] = DOWN; // del Anschlagind oben
 
@@ -1995,19 +2008,21 @@ void tastenfunktion(uint16_t Tastenwert)
                      if (pfeiltastecode == 0)
                      {
                         //OSZIB_LO();
-                        pfeiltastecode = UP;
+                        pfeiltastecode = DOWN;
                         pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
                         endimpulsdauer = TASTENENDIMPULSDAUER;
                         
                         tastaturstep = MB_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
 
-                        digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,HIGH);
+                        digitalWriteFast(MB_EN,LOW);
+                        
+
                         richtung = (1<<RICHTUNG_D);
                         richtungB = (1<<RICHTUNG_D);
                         if(OLED)
                      {
-                        u8g2.print("Ri D ");
+                        u8g2.print("Ri B ");
                         u8g2.print(richtungB);
                      }
                         
@@ -2025,9 +2040,9 @@ void tastenfunktion(uint16_t Tastenwert)
                   }
                }break;
 
-               case 8:    // down  Richtung Motor                              //
+               case 8:    //down, vom Motor weg                              //
                {
-                  if (digitalRead(END_B0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B0
+                  if (digitalRead(END_B1_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B0
                   {
                      cncstatus = 0;
                      ladeposition = 0;
@@ -2035,28 +2050,30 @@ void tastenfunktion(uint16_t Tastenwert)
                      if(OLED)
                      {
                         u8g2.setCursor(0,120);
-                        u8g2.print("T2 ");
+                        u8g2.print("T8 ");
                      }
                      
                       joystickbuffer[0] = 0x80 + DOWN;
-                     if (digitalRead(END_B1_PIN)==0)
+
+                     if (digitalRead(END_B0_PIN)==0)
                      {
                         joystickbuffer[3] = UP; // del Anschlagind oben
-                        //oled_frame(anschlagstruct.x,anschlagstruct.y,50);
-                        //oled_delete(anschlagstruct.x,anschlagstruct.y,50);
-                        //oled_frame(0,anschlagstruct.y+20,90);
-                        //oled_delete(0,anschlagstruct.y+20,100);
-                     }                       
+                         
+                     }       
+
+
                      if (pfeiltastecode == 0)
                      {
-                        pfeiltastecode = DOWN;
+                        pfeiltastecode = UP;
                         pfeilimpulsdauer = TASTENSTARTIMPULSDAUER;
                         endimpulsdauer = TASTENENDIMPULSDAUER;
                         pfeilrampcounter = 0;
                         tastaturstep = MB_STEP;
 
-                        digitalWriteFast(MB_EN,LOW);
                         digitalWriteFast(MB_RI,LOW);
+                        digitalWriteFast(MB_EN,LOW);
+                        
+
                         richtung = (1<<RICHTUNG_B);
                         richtungB = (1<<RICHTUNG_B);
                         if(OLED)
@@ -2160,6 +2177,7 @@ void tastenfunktion(uint16_t Tastenwert)
 
                         digitalWriteFast(MA_RI,HIGH);
                         digitalWriteFast(MA_EN,LOW);
+                        
                         richtung = (1<<RICHTUNG_C); // 0x04
                         richtungA = (1 << RICHTUNG_C); // Vorwarts RIGHT
                         // joystickbuffer[3] = LEFT; // del Anschlagind links
@@ -2346,7 +2364,10 @@ void tastenfunktion(uint16_t Tastenwert)
                {
 
                   home_horizontal();
+                  
                   break;
+
+
                   tastaturtimercounter = 500;
                    //pfeiltastecode = LEFT;
                   pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
@@ -4676,7 +4697,7 @@ void loop()
                   sendbuffer[6] = ladeposition;
                   // sendbuffer[7]=(ladeposition & 0xFF00) >> 8;
                   sendbuffer[22] = cncstatus;
-                  // TODO : ev.  A0 setzen
+                  // TODO : ev.  A0 setzen0xA8
                   sendbuffer[0] = 0xA1;
                   usb_rawhid_send((void *)sendbuffer, 0);
                   OSZI_D_HI();
