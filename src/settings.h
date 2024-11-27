@@ -15,7 +15,7 @@
 #define JOYSTICK 0
 
 #define SERVO 1
-#define OLED 0
+#define OLED 1
 
 
 #define EEPROMCALIB 0x10
@@ -121,6 +121,9 @@
 #define STROM               4    // Stepperstrom ON: HI
 
 #define GO_HOME            3     // Bit fuer befehl beginn home auf cncstatus
+#define HOMESCHRITT 11
+
+
 #define DC_DIVIDER         1      // teilt die pwm-Frequenz in ISR
 
 
@@ -162,6 +165,10 @@
 
 
 #define RAMPSCHRITT  2
+
+
+#define STIFTUP  0
+#define STIFTDOWN  1
 
 
 #define DEVICE_MILL  1

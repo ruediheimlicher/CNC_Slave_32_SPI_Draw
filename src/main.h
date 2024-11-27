@@ -116,7 +116,7 @@ volatile uint16_t timerintervall_FAST = 0; // Intervall gross
 
 // Ramp
 
-//volatile uint16_t     ramptimerintervall = TIMERINTERVALL;
+//volatile uint16_t     timerintervall = TIMERINTERVALL;
 
 volatile uint16_t     rampminimum = 20;
 

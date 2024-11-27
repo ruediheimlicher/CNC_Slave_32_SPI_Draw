@@ -157,7 +157,6 @@ volatile uint8_t outbuffer[USB_DATENBREITE] = {};
 volatile uint16_t usb_recv_counter = 0;
 volatile uint16_t cnc_recv_counter = 0;
 
-volatile uint16_t usb_ramptimerintervall = TIMERINTERVALL;
 volatile uint8_t usb_rampfaktor = RAMPFAKTOR;
 
 // end USB
@@ -702,6 +701,10 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
       // // Serial.printf("+++ +++ +++ \t\t\t index: %d AbschnittLaden_bres WENDEPUNKT \n",index);
      rampstatus |=(1<<RAMPOKBIT);
    }
+   else
+   {
+      rampstatus &= ~(1<<RAMPOKBIT);
+   }
 
    // pwm-rate
    PWM = AbschnittDaten[20];
@@ -744,6 +747,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    dataL = AbschnittDaten[0];
    dataH = AbschnittDaten[1];
    
+   int8_t vz = 1;
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
       richtung |= (1 << RICHTUNG_A); // Rueckwarts LEFT
@@ -751,7 +755,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
       digitalWriteFast(MA_RI, LOW);  // PIN fuer Treiber stellen
       //digitalWriteFast(MA_RI, HIGH);
-      //vz = -1;
+      vz = -1;
       // lcd_putc('r');
    }
    else
@@ -788,11 +792,13 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    dataH = AbschnittDaten[3];
    // lcd_gotoxy(19,1);
 
+   vz = 1;
    if (dataH & (0x80)) // Bit 7 gesetzt, negative zahl
    {
       richtung |= (1 << RICHTUNG_B); // Rueckwarts
       richtungB = (1 << RICHTUNG_B); //** * / Vorwarts RIGHT
       digitalWriteFast(MB_RI, LOW);  // lcd_putc('r');
+      vz = -1;
    }
    else
    {
@@ -942,7 +948,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
    bres_counterA = deltafastdirectionA; // aktueller counter fuer steps
    bres_abschnittmitte = deltafastdirectionA/2;
 
-   usb_ramptimerintervall = TIMERINTERVALL; 
+   timerintervall = TIMERINTERVALL; 
 
    if (rampstatus & (1 << RAMPOKBIT))
    {
@@ -951,12 +957,13 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
       rampstatus |= (1 << RAMPFIRSTRUNBIT); // Ramp am Anfang
       errpos = 0;
+    
+      // Rampbreite bestimmen
+      rampbreite = timerintervall * usb_rampfaktor/RAMPSCHRITT;
+      // timerintervall verlaengern
+      timerintervall += rampbreite;
 
-      
-      rampbreite = usb_ramptimerintervall * usb_rampfaktor/RAMPSCHRITT;
-      usb_ramptimerintervall += rampbreite;
-
-      delayTimer.update(usb_ramptimerintervall);
+      delayTimer.update(timerintervall);
    
    }
    else
@@ -973,7 +980,7 @@ uint8_t AbschnittLaden_bres(uint8_t *AbschnittDaten) // 22us
 
    // RAMP
    usb_rampfaktor = AbschnittDaten[36];
-   usb_ramptimerintervall = AbschnittDaten[37];
+   timerintervall = AbschnittDaten[37];
 
 
 
@@ -1044,17 +1051,15 @@ void AnschlagVonEndPin(const uint8_t endpin)
       //u8g2.setCursor(60,120);
       uint8_t anschlagsend = 0;
       //u8g2.print("PIN");
-      if ((digitalRead(END_A0_PIN) == 0) && (richtungA & (1<<RICHTUNG_A))) // Anschlag an A0 OK
+      if ((digitalRead(END_A0_PIN) == 0) && (richtungA & (1<<RICHTUNG_A))) // Anschlag an A0 OK links in Draw
       {
          if(OLED)
          {
             oled_delete(0,anschlagstruct.y,120);
             u8g2.drawStr(anschlagstruct.x,anschlagstruct.y,"A0 ");
-         
-         }
-         
+         }       
          //u8g2.print("A0");
-
+         sendbuffer[0] = 0xA5 ;
          //Motor A stoppen
          digitalWriteFast(MA_EN,HIGH);
          deltafastdirectionA = 0;
@@ -1062,10 +1067,10 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltaslowdirectionA = 0;
          anschlagstruct.data = RICHTUNG_A;
          anschlagstruct.aktiv = 1;
-         richtungA = 0;
-         
+         richtungA &= ~(1<<RICHTUNG_A);
          anschlagsend = 1;
-         if(cncstatus & (1 << GO_HOME))
+         // Home checken
+         if(cncstatus & (1 << GO_HOME)) // daten von homesenkrecht laden
          {
             oled_delete(0,anschlagstruct.y,120);
             //u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME");
@@ -1074,8 +1079,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          }
       }
     
-
-      if ((digitalRead(END_A1_PIN) == 0) && (richtungA & (1<<RICHTUNG_C)))// Anschlag an A1
+      if ((digitalRead(END_A1_PIN) == 0) && (richtungA & (1<<RICHTUNG_C)))// Anschlag an A1, rechts in Draw
       {
          if(OLED)
          {
@@ -1085,6 +1089,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          }
          //u8g2.print("A1");
          //Motor A stoppen
+         sendbuffer[0] = 0xA5 + 1;
          digitalWriteFast(MA_EN,HIGH);
          deltafastdirectionA = 0;
          deltafastdelayA = 0;
@@ -1092,6 +1097,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          anschlagstruct.data = RICHTUNG_C;
          anschlagstruct.aktiv = 1;
          anschlagsend = 1;
+         richtungA &= ~(1<<RICHTUNG_C);
       }
 
       if (((digitalRead(END_B0_PIN) == 0) && (richtungB & (1<<RICHTUNG_B))))// Anschlag an B0 OK
@@ -1110,10 +1116,11 @@ void AnschlagVonEndPin(const uint8_t endpin)
             deltaslowdirectionB = 0;
             bres_counterA = 0;
             bres_delayA = 0;
-            richtungB = 0;
+            richtungB &= ~(1<<RICHTUNG_B);
 
             anschlagsend = 1;
             anschlagstruct.data = RICHTUNG_B;
+            sendbuffer[0] = 0xA5 + 2;
           //  digitalWriteFast(MA_EN, HIGH);
           //  
             anschlagstruct.aktiv = 1;
@@ -1131,6 +1138,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
             ringbufferstatus = 0x00;
             anschlagstatus = 0;
             uint8_t i = 0;
+            anschlagsend = 1;
 
             
             for (i = 0; i < USB_DATENBREITE; i++)
@@ -1167,14 +1175,19 @@ void AnschlagVonEndPin(const uint8_t endpin)
          deltafastdelayB = 0;
          deltaslowdirectionB = 0;
          anschlagstruct.data = RICHTUNG_D;
-         richtungB = 0;
          digitalWriteFast(MB_EN,HIGH);
          anschlagstruct.aktiv = 1;
          anschlagsend = 1;
+         sendbuffer[0] = 0xA5 + 3;
+         richtungB &= ~(1<<RICHTUNG_D);
       }
+
+
+
 
       if (anschlagsend)
       {
+         
           sendbuffer[5] = (abschnittnummer & 0xFF00) >> 8;
          
          sendbuffer[6] = abschnittnummer & 0x00FF;
@@ -1184,10 +1197,13 @@ void AnschlagVonEndPin(const uint8_t endpin)
 
          //
          sendbuffer[22] = cncstatus;
-
-         sendbuffer[9] += 11;
+        {
+            //sendbuffer[9] += HOMESCHRITT; // 
+         }
 
          uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
+
+         
       }
    
       //u8g2.sendBuffer();
@@ -2856,7 +2872,7 @@ void setup()
 
    //// lcd.setCursor(0,0);
    //// lcd.print("hallo");
-   delayTimer.begin(delaytimerfunction, usb_ramptimerintervall);
+   delayTimer.begin(delaytimerfunction, timerintervall);
    delayTimer.priority(0);
 
    //   threads.addThread(thread_func, 1);
@@ -4085,6 +4101,7 @@ void loop()
             endposition = abschnittnummer;
 
 
+
             cncstatus |= (1 << GO_HOME); // Bit fuer go_home setzen
             //sendbuffer[63] = 1;
             sendbuffer[22] = cncstatus;
@@ -4130,12 +4147,26 @@ void loop()
              CNCDaten[pos+1][26] = 1; // micro
 
             CNCDaten[pos+1][27] = 1;
+            CNCDaten[pos+1][35] = 1; // ramp
 
          
 
             rampstatus |= (1 << RAMPOKBIT);
-            usb_ramptimerintervall = TIMERINTERVALL;
-            startTimer2();
+
+            timerintervall = TIMERINTERVALL;
+
+             rampstatus |= (1 << RAMPSTARTBIT); // Ramp an Start
+
+            rampstatus |= (1 << RAMPFIRSTRUNBIT); // Ramp am Anfang
+             errpos = 0;
+    
+            // Rampbreite bestimmen
+            rampbreite = timerintervall * 2/RAMPSCHRITT;
+            // timerintervall verlaengern
+            timerintervall += rampbreite;
+
+            delayTimer.update(timerintervall);
+            //startTimer2();
 
             // F0 melden
             //            usb_rawhid_send((void*)sendbuffer, 0);
@@ -4157,7 +4188,7 @@ void loop()
                sendbuffer[0]=0xF3;
                sendbuffer[5]=(abschnittnummer & 0xFF00) >> 8;;
                sendbuffer[6]=abschnittnummer & 0x00FF;
-               
+               sendbuffer[9] = servopos;
                 uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
                 sendbuffer[0]=0x00;
             }
@@ -4174,6 +4205,7 @@ void loop()
                servoC.write(servopos); // sofort stellen
                digitalWriteFast(MC_EN,LOW);
                sendbuffer[0]=0xF4;
+               sendbuffer[9] = servopos;
                 uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
                 sendbuffer[0]=0x00;
             }
@@ -4428,13 +4460,13 @@ void loop()
             if (rampstatus & (1 << RAMPSTARTBIT))
             {
                rampstatus &= ~(1 << RAMPFIRSTRUNBIT);
-               if (usb_ramptimerintervall >= (timerintervall_FAST + RAMPSCHRITT)) // noch nicht auf max speed
+               if (timerintervall >= (timerintervall_FAST + RAMPSCHRITT)) // noch nicht auf max speed
                {
                   if (bres_counterA > bres_abschnittmitte)
                   //if (rampstatus & (1 << RAMPOKBIT))
                   {
-                     usb_ramptimerintervall -= RAMPSCHRITT; // impuls reduzieren
-                     delayTimer.update(usb_ramptimerintervall);
+                     timerintervall -= RAMPSCHRITT; // impuls reduzieren
+                     delayTimer.update(timerintervall);
                   }
                }
                else // max erreicht
@@ -4456,8 +4488,8 @@ void loop()
                {
                   
                   {
-                     usb_ramptimerintervall += RAMPSCHRITT; // impuls reduzieren
-                     delayTimer.update(usb_ramptimerintervall);
+                     timerintervall += RAMPSCHRITT; // impuls reduzieren
+                     delayTimer.update(timerintervall);
                   }
                }
 
