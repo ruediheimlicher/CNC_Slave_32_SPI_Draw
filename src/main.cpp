@@ -1965,7 +1965,7 @@ void tastenfunktion(uint16_t Tastenwert)
                   
                }break;
                   
-               case 8: // up      weg vom Motor                       //  
+               case 2: // up      weg vom Motor                       //  
                {
                      u8g2.setCursor(0,80);
                      u8g2.print("T81");
@@ -2025,7 +2025,7 @@ void tastenfunktion(uint16_t Tastenwert)
                   }
                }break;
 
-               case 2:    // down  Richtung Motor                              //
+               case 8:    // down  Richtung Motor                              //
                {
                   if (digitalRead(END_B0_PIN)) // Eingang ist HI, Schlitten nicht am Anschlag B0
                   {
