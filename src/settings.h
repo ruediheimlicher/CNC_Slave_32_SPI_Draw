@@ -88,9 +88,9 @@
 #define END_D0          7       //           Endanschlag D0 
 
 #define RIGHT       1
-#define UP          4
+#define UP          2
 #define LEFT        3
-#define DOWN        2
+#define DOWN        4
 
 #define RICHTUNG_A   0 // Motor A pos
 #define RICHTUNG_B   1 // Motor B pos
