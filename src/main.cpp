@@ -1735,13 +1735,13 @@ void joysticktimerBFunktion(void)
      
       if (digitalRead(END_B0_PIN)) //|| (digitalRead(MB_RI) == HIGH))// kein Anschlag
       {
-         if ((digitalRead(END_B1_PIN) ) || (digitalRead(MB_RI) == LOW))// Kein Anschlag an B1 oder Richtung von B1 weg
+         if ((digitalRead(END_B1_PIN) ) || (digitalRead(MB_RI) == HIGH))// Kein Anschlag an B1 oder Richtung von B1 weg
          {
             joysticktimerB.update(JOYSTICKIMPULS);
             digitalWriteFast(MB_STEP,HIGH); // Impuls starten
          }
       }
-      else  if (digitalRead(MB_RI) == HIGH) // Anschlag an B0 und Richtung von B0 weg
+      else  if (digitalRead(MB_RI) == LOW) // Anschlag an B0 und Richtung von B0 weg
       {
          joysticktimerB.update(JOYSTICKIMPULS);
          digitalWriteFast(MB_STEP,HIGH);
