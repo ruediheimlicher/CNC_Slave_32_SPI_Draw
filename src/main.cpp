@@ -1727,13 +1727,13 @@ void joysticktimerBFunktion(void)
      
       if (digitalRead(END_B0_PIN)) //|| (digitalRead(MB_RI) == HIGH))// kein Anschlag
          {
-            if ((digitalRead(END_B1_PIN) ) || (digitalRead(MB_RI) == LOW))// Kein Anschlag an A1 oder Richtung von A1 weg
+            if ((digitalRead(END_B1_PIN) ) || (digitalRead(MB_RI) == HIGH))// Kein Anschlag an A1 oder Richtung von A1 weg
             {
                joysticktimerB.update(JOYSTICKIMPULS);
                digitalWriteFast(MB_STEP,HIGH); // Impuls starten
             }
          }
-         else  if (digitalRead(MB_RI) == HIGH) // Anschlag an B0 und Richtung von B0 weg
+         else  if (digitalRead(MB_RI) == LOW) // Anschlag an B0 und Richtung von B0 weg
          {
             joysticktimerB.update(JOYSTICKIMPULS);
             digitalWriteFast(MB_STEP,HIGH);
@@ -2067,7 +2067,7 @@ void tastenfunktion(uint16_t Tastenwert)
                         anschlagstruct.richtung = richtung;
                         anschlagstruct.aktiv = 1;
                         joystickbuffer[2] = richtung;
-                        joystickbuffer[4] = 55;//rand() % 20 + 1;
+                        joystickbuffer[4] = Taste;//rand() % 20 + 1;
                         uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
                      }
                                        
