@@ -1075,6 +1075,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
             //u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME");
             CNCDaten[1][26] = 1;
             AbschnittLaden_bres(CNCDaten[1]);
+
          }
       }
     
@@ -1097,6 +1098,8 @@ void AnschlagVonEndPin(const uint8_t endpin)
          anschlagstruct.aktiv = 1;
          anschlagsend = 1;
          richtungA &= ~(1<<RICHTUNG_C);
+
+
       }
 
       if (((digitalRead(END_B0_PIN) == 0) && (richtungB & (1<<RICHTUNG_D))))// Anschlag an B0
@@ -1122,7 +1125,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
             anschlagsend = 1;
             anschlagstruct.data = RICHTUNG_B;
             sendbuffer[0] = 0xA5 + 2;
-            richtungB  &= ~(1<<RICHTUNG_B);
+            richtungB  &= ~(1<<RICHTUNG_D);
            
             anschlagstruct.aktiv = 1;
 
@@ -1182,10 +1185,37 @@ void AnschlagVonEndPin(const uint8_t endpin)
          anschlagsend = 1;
          anschlagstruct.data = RICHTUNG_D;
          sendbuffer[0] = 0xA5 + 3;
-         richtungB &= ~(1<<RICHTUNG_D);
+         richtungB &= ~(1<<RICHTUNG_B);
 
          anschlagstruct.aktiv = 1;
+
+
          
+         if(cncstatus & (1 << GO_HOME)) // 
+         {
+            digitalWriteFast(MB_EN,HIGH);
+            cncstatus &= ~(1 << GO_HOME);
+            abschnittnummer = 0; //
+            ladeposition = 0;
+            endposition = 0xFFFF;
+            cncstatus = 0;
+            motorstatus = 0;
+            ringbufferstatus = 0x00;
+            anschlagstatus = 0;
+            uint8_t i = 0;
+            anschlagsend = 1;
+
+            for (i = 0; i < USB_DATENBREITE; i++)
+            {
+               CNCDaten[0][i] = 0;
+               CNCDaten[1][i] = 0;
+            }
+            
+
+            taskstatus = 0;
+
+            // Home erreicht
+         }
          
          
       }
@@ -2184,6 +2214,10 @@ void tastenfunktion(uint16_t Tastenwert)
                      //servopos = 100; //Schneller lauf
                      servoC.write(servopos); // sofort stellen
                      digitalWriteFast(MC_EN,LOW);
+                      joystickbuffer[0] = 0xF3;
+                     joystickbuffer[10] = 1;
+                     uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
+
                   }
 
               
@@ -2197,6 +2231,9 @@ void tastenfunktion(uint16_t Tastenwert)
                      servopos = 200;
                      servoC.write(servopos);
                      //digitalWriteFast(MC_EN,LOW);
+                     joystickbuffer[0] = 0xF3;
+                     joystickbuffer[10] = 2;
+                     uint8_t senderfolg = usb_rawhid_send((void *)joystickbuffer, 10);
                   }
                  
                   
