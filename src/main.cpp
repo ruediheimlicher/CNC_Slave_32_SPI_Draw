@@ -2384,7 +2384,7 @@ void tastenfunktion(uint16_t Tastenwert)
                case 10: // set Nullpunkt
                {
 
-                  home_horizontal();
+                  //home_horizontal();
                   break;
                   tastaturtimercounter = 500;
                    //pfeiltastecode = LEFT;
@@ -2511,14 +2511,43 @@ void home_horizontal(void)
    u8g2.print("H");
    //taskstatus |= (1<<TASK);
    //taskstatus |= (1<<RUNNING);
-   PWM = 0;
+
+   uint8_t  home_CNCDatenA[] = {192, 221, 0, 0, 23, 0, 0, 0, 192, 221, 0, 0, 23, 0, 0, 0, 240, 3, 0, 0, 0, 1, 77, 48, 240, 48, 2, 0, 0, 3, 0, 17, 3, 0, 128, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+   uint8_t  home_CNCDatenB[] = {0, 0, 192, 221, 0, 0, 23, 0, 0,  192, 221, 0, 0, 23, 0, 240, 0, 0, 0, 0, 1, 0, 48, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+ 
+  /*
+   pfeiltastecode = LEFT;
+   pfeilimpulsdauer = TASTENSTARTIMPULSDAUER+20; // Beginn ramp
+   pfeilrampcounter = 0;
+   endimpulsdauer = TASTENENDIMPULSDAUER;
+   tastaturstep = MA_STEP; // tastaturstep steuert  in tastaturtimerFunktion  MX_STEP
+
+   digitalWriteFast(MA_EN,LOW);
+   digitalWriteFast(MA_RI,LOW);
+   richtung = (1<<RICHTUNG_A); // 0x01
+   richtungA = (1 << RICHTUNG_A); // Rueckwarts LEFT
+   anschlagstruct.richtung = richtung;
+   anschlagstruct.aktiv = 1;
+   
+    tastaturimpulscounter = 0;
+   tastaturTimer.begin(tastaturtimerFunktion,TASTENSTARTIMPULSDAUER);
+   rampimpulsdauer = TASTENSTARTIMPULSDAUER;
+   tastaturindex=0;
+   cncstatus |= (1 << GO_HOME); // Bit fuer go_home setzen
+
+
+   return;
+   */
+   
+  
+
+   PWM = 100;
    abschnittnummer = 0;
 
    //digitalWriteFast(MA_EN, LOW); // Pololu A ON LEFT
-   richtungA = (1 << RICHTUNG_A); // Rueckwarts LEFT
+   //richtungA = (1 << RICHTUNG_A); // Rueckwarts LEFT
    //digitalWriteFast(MA_RI, LOW);  // PIN fuer Treiber stellen
-   abschnittnummer = 0; // diff 220520
-
+   
    ladeposition = 0;
    endposition = 0xFFFF;
    cncstatus = 0;
@@ -2529,17 +2558,19 @@ void home_horizontal(void)
    AbschnittCounter = 0;
    
    sendbuffer[0] = 0xF0;
-   //endposition = abschnittnummer; // bewirkt nur 1 Richtung
+   
+   abschnittnummer = 0;
+   endposition = abschnittnummer; // bewirkt nur 1 Richtung
 
    
    cncstatus |= (1 << GO_HOME); // Bit fuer go_home setzen
 
    uint8_t pos = 0;
    uint8_t i = 0;
-   for (i = 0; i < USB_DATENBREITE; i++)
+   for (i = 0; i < USB_DATENBREITE; i++) // Daten weg
    {
-      CNCDaten[pos][i] = 0;
-      CNCDaten[pos+1][i] = 0;
+      CNCDaten[pos][i] = home_CNCDatenA[i];
+      CNCDaten[pos+1][i] = home_CNCDatenB[i];
    }
    //u8g2.print("A");
    
@@ -2547,47 +2578,86 @@ void home_horizontal(void)
    uint8_t dataL = 128;
    uint8_t dataH = 210;
 
-   uint8_t delayL = 8;
+   uint8_t delayL = 14;
    uint8_t delayH = 0;
-   CNCDaten[pos][0] = dataL;
-   CNCDaten[pos][1] = dataH;
+      /*
+      CNCDaten[pos][0] = dataL;
+      CNCDaten[pos][1] = dataH;
 
-   // Motor B
-   CNCDaten[pos+1][2] = dataL; // schritteax
-   CNCDaten[pos+1][3] = dataH;  // schritteay
+      CNCDaten[pos][4] = delayL;
+      CNCDaten[pos][5] = delayH;
 
 
-   CNCDaten[pos][4] = delayL;
-   CNCDaten[pos][5] = delayH;
+      // Motor B
+      
+      dataH = 80; // positiv
 
-   CNCDaten[pos+1][6] = delayL;
-   CNCDaten[pos+1][7] = delayH;
+      CNCDaten[pos+1][2] = dataL; // schritteax
+      CNCDaten[pos+1][3] = dataH;  // schritteay
+      
+      CNCDaten[pos+1][6] = delayL;
+      CNCDaten[pos+1][7] = delayH;
 
-   //CNCDaten[pos][16] = 0xF0;
-   //CNCDaten[pos+1][16] = 0xF0;
-   
-   CNCDaten[pos][17] = 1 ; // lage
-   CNCDaten[pos+1][17] = 3 ; // lage
+      
+      //CNCDaten[pos][16] = 0xF0;
+      //CNCDaten[pos+1][16] = 0xF0;
+      
+      CNCDaten[pos][17] = 3 ; // lage
+      CNCDaten[pos+1][17] = 3; // lage
 
-   CNCDaten[pos][25] = 48; // steps
-   CNCDaten[pos+1][25] = 48; // steps
+      CNCDaten[pos][18] = 0 ; // indexh
+      CNCDaten[pos+1][18] = 0 ; // indexh
 
-   CNCDaten[pos][26] = 1; // micro
-   CNCDaten[pos+1][26] = 1; // micro
+      CNCDaten[pos][19] = 0 ; // indexl
+      CNCDaten[pos+1][18] = 1; // indexl
 
-   //print("home_horizontal CNCDaten: \(CNCDaten)")
-   rampstatus |= (1 << RAMPOKBIT);
+      CNCDaten[pos][24] = 1; // home
+      CNCDaten[pos+1][24] = 1; // home
 
-   
+
+      CNCDaten[pos][25] = 48; // steps
+      CNCDaten[pos+1][25] = 48; // steps
+
+      CNCDaten[pos][26] = 2; // micro
+      CNCDaten[pos+1][26] = 2; // micro
+
+      CNCDaten[pos][21] = 0; // motor
+      CNCDaten[pos+1][21] = 1; // motor
+
+      CNCDaten[pos][36] =   0; // rampfaktor 
+      CNCDaten[pos+1][36] =   0; // rampfaktor           
+
+   */
    
    ringbufferstatus |= (1 << STARTBIT);
+
+   AbschnittLaden_bres(home_CNCDatenA);
+
+   //rampstatus |= (1 << RAMPOKBIT);
+   //timerintervall = TIMERINTERVALL;
+
+   //rampstatus |= (1 << RAMPSTARTBIT); // Ramp an Start
+
+   //rampstatus |= (1 << RAMPFIRSTRUNBIT); // Ramp am Anfang
+   
+   
+  // ringbufferstatus |= (1 << STARTBIT);
+  // ringbufferstatus |= (1 << LASTBIT);
+
+      // Rampbreite bestimmen
+   //rampbreite = timerintervall * 2/RAMPSCHRITT;
+   // timerintervall verlaengern
+   //timerintervall += rampbreite;
+
+   //delayTimer.update(timerintervall);
+ 
   
    //taskstatus |= (1<<TASK);
    
    
-   startTimer2(); // essentiell fuer Start!
+   //startTimer2(); // essentiell fuer Start!
  
-   
+   sei();
 
    //u8g2.sendBuffer(); 
 }
@@ -4117,7 +4187,7 @@ void loop()
             analogWrite(DC_PWM, 0);
 
             abschnittnummer = 0; // diff 220520
-
+            
             ladeposition = 0;
             endposition = 0xFFFF;
             cncstatus = 0;
@@ -4428,7 +4498,7 @@ void loop()
       richtungstatus = 0; // neubeginn, set back
       oldrichtungstatus = 0;
       // Abschnitt 0 laden
-      uint8_t l = sizeof(CNCDaten[ladeposition]);
+      //uint8_t l = sizeof(CNCDaten[ladeposition]);
       uint8_t micro = CNCDaten[ladeposition][26];
 
              
