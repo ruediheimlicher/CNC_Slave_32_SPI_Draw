@@ -4315,7 +4315,7 @@ void loop()
                digitalWriteFast(MC_EN,LOW);
                sendbuffer[0]=0xF4;
                sendbuffer[9] = servopos;
-                uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
+               // uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
                 sendbuffer[0]=0x00;
             }
 
@@ -4474,6 +4474,9 @@ void loop()
 
       //OSZIB_HI();
    } // r > 0
+
+
+   
    /**   End USB-routinen   ***********************/
 
    ////#pragma mark CNC-routinen
