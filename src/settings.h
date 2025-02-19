@@ -12,6 +12,10 @@
 #define LOOPLED 18
 #define TIMER0_STARTWERT   0x40
 
+
+#define REDPWM 19
+
+
 #define JOYSTICK 0
 
 #define SERVO 1

@@ -2858,9 +2858,14 @@ void setup()
    eeprom_initialize();
 
 
-   //Serial.begin(115200);
+  // Blink
    pinMode(LOOPLED, OUTPUT);
    digitalWriteFast(LOOPLED,LOW);
+
+   // Anzeige red pwm
+   pinMode(REDPWM, OUTPUT);
+   digitalWriteFast(REDPWM,LOW);
+
 
    // https://registry.platformio.org/libraries/pedvide/Teensy_ADC/examples/analogRead/analogRead.ino
    pinMode(TASTATURPIN , INPUT);
@@ -3189,7 +3194,7 @@ void loop()
       //      // lcd.print(String(loopLED));
       
       digitalWriteFast(LOOPLED,!(digitalRead(LOOPLED)));
-      // blink mit MC_EN
+      // blink mit PIN 18
       //digitalWriteFast(MC_EN, !(digitalRead(MC_EN)));
 
       parallelcounter += 2;
@@ -3825,7 +3830,7 @@ void loop()
                // noInterrupts();
                // Serial.printf("B5 abschnittnummer 0 \tbuffer25 lage: %d \t buffer32 device: %d\n", buffer[25], buffer[32]);
                //             // Serial.printf("count: %d\n",buffer[22]);
-               PWM = buffer[29];
+               PWM = buffer[20];
                //              lcd.print(String(PWM));
 
                ladeposition = 0;
@@ -4036,7 +4041,7 @@ void loop()
             endposition = 0xFFFF;
 
             AbschnittCounter = 0;
-            PWM = sendbuffer[29];
+            PWM = sendbuffer[20];
             // digitalWriteFast(DC_PWM,HIGH);
             analogWrite(DC_PWM, 0);
 
@@ -4091,7 +4096,7 @@ void loop()
             {
                // CMD_PORT |= (1<<STROM); // ON
                digitalWriteFast(STROM, HIGH);
-               PWM = buffer[29];
+               PWM = buffer[20];
                
             }
             else
@@ -4561,10 +4566,10 @@ void loop()
    if (deltafastdirectionA > 0) // Bewegung auf Seite A vorhanden
    {
       // // Serial.printf("abschnittnummer: %d richtungstatus: %d\n",abschnittnummer,richtungstatus);
+      
       //  Es hat noch Steps, bres_delayA ist abgezaehlt (bres_delayA bestimmt Impulsabstand fuer Steps)
       
-      
-      if ((bres_counterA > 0) && ((bres_delayA == 0)  ) && ((!(anschlagstatus & (1 << END_A0))) && (!(anschlagstatus & (1 << END_B0)))))
+     if ((bres_counterA > 0) && ((bres_delayA == 0)  ) && ((!(anschlagstatus & (1 << END_A0))) && (!(anschlagstatus & (1 << END_B0)))))
       {
          // start ramp
          if (rampstatus & (1 << RAMPOKBIT))
