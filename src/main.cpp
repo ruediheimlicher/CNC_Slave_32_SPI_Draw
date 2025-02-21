@@ -2863,8 +2863,8 @@ void setup()
    digitalWriteFast(LOOPLED,LOW);
 
    // Anzeige red pwm
-   pinMode(REDPWM, OUTPUT);
-   digitalWriteFast(REDPWM,LOW);
+  // pinMode(REDPWM, OUTPUT);
+ //  digitalWriteFast(REDPWM,LOW);
 
 
    // https://registry.platformio.org/libraries/pedvide/Teensy_ADC/examples/analogRead/analogRead.ino
@@ -4076,7 +4076,9 @@ void loop()
 
             PWM = buffer[20];
             // Serial.printf("E2 setPWM: %d\n", PWM);
-            analogWrite(DC_PWM, PWM);
+
+           // analogWrite(DC_PWM, PWM);
+           
             // analogWrite(9,PWM);
 
             parallelstatus |= (1 << THREAD_COUNT_BIT);
