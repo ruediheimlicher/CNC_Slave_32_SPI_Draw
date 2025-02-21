@@ -2858,14 +2858,9 @@ void setup()
    eeprom_initialize();
 
 
-  // Blink
+   //Serial.begin(115200);
    pinMode(LOOPLED, OUTPUT);
    digitalWriteFast(LOOPLED,LOW);
-
-   // Anzeige red pwm
-  // pinMode(REDPWM, OUTPUT);
- //  digitalWriteFast(REDPWM,LOW);
-
 
    // https://registry.platformio.org/libraries/pedvide/Teensy_ADC/examples/analogRead/analogRead.ino
    pinMode(TASTATURPIN , INPUT);
@@ -3194,7 +3189,7 @@ void loop()
       //      // lcd.print(String(loopLED));
       
       digitalWriteFast(LOOPLED,!(digitalRead(LOOPLED)));
-      // blink mit PIN 18
+      // blink mit MC_EN
       //digitalWriteFast(MC_EN, !(digitalRead(MC_EN)));
 
       parallelcounter += 2;
@@ -3830,7 +3825,7 @@ void loop()
                // noInterrupts();
                // Serial.printf("B5 abschnittnummer 0 \tbuffer25 lage: %d \t buffer32 device: %d\n", buffer[25], buffer[32]);
                //             // Serial.printf("count: %d\n",buffer[22]);
-               PWM = buffer[20];
+               PWM = buffer[29];
                //              lcd.print(String(PWM));
 
                ladeposition = 0;
@@ -4041,7 +4036,7 @@ void loop()
             endposition = 0xFFFF;
 
             AbschnittCounter = 0;
-            PWM = sendbuffer[20];
+            PWM = sendbuffer[29];
             // digitalWriteFast(DC_PWM,HIGH);
             analogWrite(DC_PWM, 0);
 
@@ -4076,9 +4071,7 @@ void loop()
 
             PWM = buffer[20];
             // Serial.printf("E2 setPWM: %d\n", PWM);
-
-           // analogWrite(DC_PWM, PWM);
-           
+            analogWrite(DC_PWM, PWM);
             // analogWrite(9,PWM);
 
             parallelstatus |= (1 << THREAD_COUNT_BIT);
@@ -4098,7 +4091,7 @@ void loop()
             {
                // CMD_PORT |= (1<<STROM); // ON
                digitalWriteFast(STROM, HIGH);
-               PWM = buffer[20];
+               PWM = buffer[29];
                
             }
             else
@@ -4322,7 +4315,8 @@ void loop()
                digitalWriteFast(MC_EN,LOW);
                sendbuffer[0]=0xF4;
                sendbuffer[9] = servopos;
-               // uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
+               // nicht mehr zurueckmelden: bring positionsanzeige durcheinander
+            //    uint8_t senderfolg = usb_rawhid_send((void *)sendbuffer, 10);
                 sendbuffer[0]=0x00;
             }
 
@@ -4481,9 +4475,6 @@ void loop()
 
       //OSZIB_HI();
    } // r > 0
-
-
-   
    /**   End USB-routinen   ***********************/
 
    ////#pragma mark CNC-routinen
@@ -4568,10 +4559,10 @@ void loop()
    if (deltafastdirectionA > 0) // Bewegung auf Seite A vorhanden
    {
       // // Serial.printf("abschnittnummer: %d richtungstatus: %d\n",abschnittnummer,richtungstatus);
-      
       //  Es hat noch Steps, bres_delayA ist abgezaehlt (bres_delayA bestimmt Impulsabstand fuer Steps)
       
-     if ((bres_counterA > 0) && ((bres_delayA == 0)  ) && ((!(anschlagstatus & (1 << END_A0))) && (!(anschlagstatus & (1 << END_B0)))))
+      
+      if ((bres_counterA > 0) && ((bres_delayA == 0)  ) && ((!(anschlagstatus & (1 << END_A0))) && (!(anschlagstatus & (1 << END_B0)))))
       {
          // start ramp
          if (rampstatus & (1 << RAMPOKBIT))
