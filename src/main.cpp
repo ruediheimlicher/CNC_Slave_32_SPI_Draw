@@ -1050,6 +1050,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
       //u8g2.setCursor(60,120);
       uint8_t anschlagsend = 0;
       //u8g2.print("PIN");
+      sendbuffer[13] = 0; // home
       if ((digitalRead(END_A0_PIN) == 0) && (richtungA & (1<<RICHTUNG_A))) // Anschlag an A0 OK links in Draw
       {
          if(OLED)
@@ -1071,8 +1072,11 @@ void AnschlagVonEndPin(const uint8_t endpin)
          // Home checken
          if(cncstatus & (1 << GO_HOME)) // daten von homesenkrecht laden
          {
-            oled_delete(0,anschlagstruct.y,120);
-            //u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME");
+            if (OLED)
+            {
+               oled_delete(0,anschlagstruct.y,120);
+               u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME A0");
+            }
             CNCDaten[1][26] = 1;
             AbschnittLaden_bres(CNCDaten[1]);
 
@@ -1130,33 +1134,50 @@ void AnschlagVonEndPin(const uint8_t endpin)
             anschlagstruct.aktiv = 1;
 
 
-         if(cncstatus & (1 << GO_HOME))
-         {
-            digitalWriteFast(MA_EN,HIGH);
-            cncstatus &= ~(1 << GO_HOME);
-            abschnittnummer = 0; //
-            ladeposition = 0;
-            endposition = 0xFFFF;
-            cncstatus = 0;
-            motorstatus = 0;
-            ringbufferstatus = 0x00;
-            anschlagstatus = 0;
-            uint8_t i = 0;
-            anschlagsend = 1;
-
-            for (i = 0; i < USB_DATENBREITE; i++)
+            if(cncstatus & (1 << GO_HOME))
             {
-               CNCDaten[0][i] = 0;
-               CNCDaten[1][i] = 0;
+               sendbuffer[13] = 1;
+               if (OLED)
+               {
+                  oled_delete(0,anschlagstruct.y,120);
+                  u8g2.drawStr(anschlagstruct.x,anschlagstruct.y+20,"HOME B0");
+               }
+               
+               digitalWriteFast(MA_EN,HIGH);
+               cncstatus &= ~(1 << GO_HOME);
+               abschnittnummer = 0; //
+               ladeposition = 0;
+               endposition = 0xFFFF;
+               cncstatus = 0;
+               motorstatus = 0;
+               ringbufferstatus = 0x00;
+               anschlagstatus = 0;
+               uint8_t i = 0;
+               anschlagsend = 1;
+               // andere Seite auch abstellen
+               deltafastdirectionA = 0;
+               deltafastdelayA = 0;
+               deltaslowdirectionA = 0;
+               
+
+               for (i = 0; i < USB_DATENBREITE; i++)
+               {
+                  CNCDaten[0][i] = 0;
+                  CNCDaten[1][i] = 0;
+               }
+               digitalWriteFast(MA_EN, HIGH);
+               digitalWriteFast(MB_EN, HIGH);
+               
+               digitalWriteFast(MA_STEP, HIGH);
+               digitalWriteFast(MB_STEP, HIGH);
+
+
+               taskstatus = 0;
+               //pfeilrampcounter = 0;
+               //endimpulsdauer = ENDIMPULSDAUER;
+               //analogtastaturstatus &= ~(1<<TASTE_ON);
+
             }
-            
-
-            taskstatus = 0;
-            //pfeilrampcounter = 0;
-            //endimpulsdauer = ENDIMPULSDAUER;
-            //analogtastaturstatus &= ~(1<<TASTE_ON);
-
-         }
 
       }
 
@@ -1193,6 +1214,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
          
          if(cncstatus & (1 << GO_HOME)) // 
          {
+            sendbuffer[13] = 1;
             digitalWriteFast(MB_EN,HIGH);
             cncstatus &= ~(1 << GO_HOME);
             abschnittnummer = 0; //
@@ -1204,13 +1226,21 @@ void AnschlagVonEndPin(const uint8_t endpin)
             anschlagstatus = 0;
             uint8_t i = 0;
             anschlagsend = 1;
+            // andere Seite auch abstellen
+            deltafastdirectionA = 0;
+            deltafastdelayA = 0;
+            deltaslowdirectionA = 0;
 
             for (i = 0; i < USB_DATENBREITE; i++)
             {
                CNCDaten[0][i] = 0;
                CNCDaten[1][i] = 0;
             }
+            digitalWriteFast(MA_EN, HIGH);
+            digitalWriteFast(MB_EN, HIGH);
             
+            digitalWriteFast(MA_STEP, HIGH);
+            digitalWriteFast(MB_STEP, HIGH);
 
             taskstatus = 0;
 
@@ -4549,7 +4579,6 @@ void loop()
    
    AnschlagVonEndPin(0);
 
-
    // **************************************
    // * Motor A,B *
    // **************************************
@@ -4777,7 +4806,7 @@ void loop()
                   //taskstatus &= ~(1<<TASK);
                   // sei();
                }
-               else
+               else 
                {
                   OSZI_D_LO();
                   // neuen Abschnitt abrufen
