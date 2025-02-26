@@ -1256,7 +1256,7 @@ void AnschlagVonEndPin(const uint8_t endpin)
       if (anschlagsend)
       {
          
-          sendbuffer[5] = (abschnittnummer & 0xFF00) >> 8;
+         sendbuffer[5] = (abschnittnummer & 0xFF00) >> 8;
          
          sendbuffer[6] = abschnittnummer & 0x00FF;
 
@@ -4040,6 +4040,9 @@ void loop()
          case 0xE0: // Man: Alles stoppen
          {
             // Serial.printf("E0 Stop\n");
+            u8g2.setCursor(410,80);
+            u8g2.print("HALT");
+            u8g2.sendBuffer();
             ringbufferstatus = 0;
             motorstatus = 0;
             anschlagstatus = 0;
@@ -4066,7 +4069,7 @@ void loop()
             endposition = 0xFFFF;
 
             AbschnittCounter = 0;
-            PWM = sendbuffer[29];
+            PWM = 0;
             // digitalWriteFast(DC_PWM,HIGH);
             analogWrite(DC_PWM, 0);
 
@@ -4080,12 +4083,12 @@ void loop()
             CounterC = 0;
             CounterD = 0;
 
-            /*
+            
             digitalWriteFast(MA_EN,HIGH);
             digitalWriteFast(MB_EN,HIGH);
             digitalWriteFast(MC_EN,HIGH);
             digitalWriteFast(MD_EN,HIGH);
-            */
+            
             // lcd.setCursor(0,1);
             // lcd.print("HALT");
 
