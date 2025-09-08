@@ -1957,7 +1957,7 @@ void tastenfunktion(uint16_t Tastenwert)
 {  
    if (Tastenwert>10) // ca Minimalwert der Matrix
    {      
-        tastaturcounter++;       
+      tastaturcounter++;       
       if (tastaturcounter>=50)   //   Prellen
       {        
          tastaturcounter=0x00;
@@ -1997,7 +1997,7 @@ void tastenfunktion(uint16_t Tastenwert)
             // 
             if(OLED) // Taste und Tastenwert anzeigen
             {
-              oled_delete(0,80,120);
+               oled_delete(0,80,120);
                u8g2.setCursor(0,80);
                u8g2.print(Tastenwert);
                u8g2.print(" ");
@@ -2303,8 +2303,8 @@ void tastenfunktion(uint16_t Tastenwert)
                      
                      //u8g2.setCursor(0, CALIB_Y);
                      u8g2.setDrawColor(0);
-                     u8g2.drawBox(0,JOYSTICK_Y-charh,110,2*(charh+4));// Titel
-                     u8g2.drawBox(CALIB_X,CALIB_Y,CALIB_W,CALIB_H); // calib box
+                     u8g2.drawBox(0,JOYSTICK_Y-charh,110,2*(charh+4));// Titel weg
+                     u8g2.drawBox(CALIB_X,CALIB_Y,CALIB_W,CALIB_H); // calib box weg
                      u8g2.setDrawColor(1);
 
                      //u8g2.print(F("xxxx"));
